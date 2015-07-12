@@ -28,8 +28,8 @@ public final class PhysicsDebugSettings {
 	} // Make sure that utility classes (classes that contain only static methods or fields in their API) do not have a public constructor.
 
 	public static class Render {
-		public static final boolean RENDER_COLLISION_FRAMES = false;
-		public static final boolean RENDER_BODIES = false;
+		public static final boolean RENDER_COLLISION_FRAMES = true;
+		public static final boolean RENDER_BODIES = true;
 		public static final boolean RENDER_JOINTS = false;
 		public static final boolean RENDER_AABB = false;
 		public static final boolean RENDER_INACTIVE_BODIES = false;

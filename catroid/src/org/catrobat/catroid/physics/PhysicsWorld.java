@@ -36,6 +36,7 @@ import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.content.Look;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.physics.shapebuilder.PhysicsShapeBuilder;
+import org.catrobat.catroid.physics.shapebuilder.PhysicsShapeUpdater;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,11 +138,12 @@ public class PhysicsWorld {
 		return world.getGravity();
 	}
 
-	public void changeLook(PhysicsObject physicsObject, Look look) {
+	public synchronized void changeLook(PhysicsObject physicsObject, Look look) {
+		float scaleFactor = look.getSizeInUserInterfaceDimensionUnit() / 100f;
 		Shape[] shapes = null;
 		if (look.getLookData() != null && look.getLookData().getLookFileName() != null) {
-			shapes = physicsShapeBuilder.getShape(look.getLookData(),
-					look.getSizeInUserInterfaceDimensionUnit() / 100f);
+			PhysicsShapeUpdater.instance.register(look.getLookData(), physicsObject, look.getScaleX(), PhysicsShapeBuilder.getAccuracyLevel(scaleFactor)); // TODO[physics]: adjust for separate X/Y scaling
+			shapes = physicsShapeBuilder.getShape(look.getLookData(), scaleFactor);
 		}
 		physicsObject.setShape(shapes);
 	}
