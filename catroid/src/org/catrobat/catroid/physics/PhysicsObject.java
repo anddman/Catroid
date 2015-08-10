@@ -96,7 +96,6 @@ public class PhysicsObject {
 		if (Arrays.equals(this.shapes, shapes)) {
 			return;
 		}
-		Log.d(TAG, "setting shape of: " + this.toString());
 
 		if (shapes != null) {
 			this.shapes = Arrays.copyOf(shapes, shapes.length);
@@ -117,19 +116,16 @@ public class PhysicsObject {
 		}
 
 		setMass(mass);
-		Log.d(TAG, "setting shape of: " + this.toString() + " done");
 		calculateCircumference();
 	}
 
-	private void calculateCircumference() {
+	private synchronized void calculateCircumference() {
 		if (body.getFixtureList().size == 0) {
 			//Log.d(TAG, "No fixtures, so reset circumference to zero");
 			circumference = 0;
 			return;
 		}
-		Log.d(TAG, "calculating circumference of: " + this.toString());
 		circumference = PhysicsWorldConverter.convertNormalToBox2dCoordinate(getBoundaryBoxDimensions().len() / 2.0f);
-		Log.d(TAG, "calculating circumference of: " + this.toString() + " done");
 	}
 
 	public Type getType() {
@@ -237,7 +233,6 @@ public class PhysicsObject {
 	}
 
 	public void setMass(float mass) {
-		Log.d(TAG, "setting mass of: " + this.toString());
 		this.mass = mass;
 
 		if (mass < 0) {
@@ -251,7 +246,6 @@ public class PhysicsObject {
 		}
 		float area = body.getMass() / fixtureDef.density;
 		float density = mass / area;
-		Log.d(TAG, "setting mass of: " + this.toString() + " done");
 		setDensity(density);
 	}
 
@@ -260,7 +254,6 @@ public class PhysicsObject {
 	}
 
 	private void setDensity(float density) {
-		Log.d(TAG, "setting density of: " + this.toString());
 		if (density < MIN_DENSITY) {
 			density = PhysicsObject.MIN_DENSITY;
 		}
@@ -269,7 +262,6 @@ public class PhysicsObject {
 			fixture.setDensity(density);
 		}
 		body.resetMassData();
-		Log.d(TAG, "setting density of: " + this.toString() + " done");
 	}
 
 	public float getFriction() {
@@ -414,7 +406,7 @@ public class PhysicsObject {
 		return collisionMaskRecord == PhysicsWorld.MASK_NOCOLLISION;
 	}
 
-	private void calculateAabb() {
+	private synchronized void calculateAabb() {
 		bodyAabbLowerLeft = new Vector2(Integer.MAX_VALUE, Integer.MAX_VALUE);
 		bodyAabbUpperRight = new Vector2(Integer.MIN_VALUE, Integer.MIN_VALUE);
 		Transform transform = body.getTransform();
@@ -432,17 +424,24 @@ public class PhysicsObject {
 		}
 	}
 
-	private void calculateAabb(Fixture fixture, Transform transform) {
+	private synchronized void calculateAabb(Fixture fixture, Transform transform) {
+		Shape.Type fixtureType;
+		try {
+			fixtureType = fixture.getType();
+		} catch (Exception e) {
+			Log.e(TAG, "Exception on Fixture.getType", e);
+			fixtureType = Shape.Type.Polygon;
+		}
 		fixtureAabbLowerLeft = new Vector2(Integer.MAX_VALUE, Integer.MAX_VALUE);
 		fixtureAabbUpperRight = new Vector2(Integer.MIN_VALUE, Integer.MIN_VALUE);
-		if (fixture.getType() == Shape.Type.Circle) {
+		if (fixtureType == Shape.Type.Circle) {
 			CircleShape shape = (CircleShape) fixture.getShape();
 			float radius = shape.getRadius();
 			tmpVertice.set(shape.getPosition());
 			tmpVertice.rotate(transform.getRotation()).add(transform.getPosition());
 			fixtureAabbLowerLeft.set(tmpVertice.x - radius, tmpVertice.y - radius);
 			fixtureAabbUpperRight.set(tmpVertice.x + radius, tmpVertice.y + radius);
-		} else if (fixture.getType() == Shape.Type.Polygon) {
+		} else if (fixtureType == Shape.Type.Polygon) {
 			PolygonShape shape = (PolygonShape) fixture.getShape();
 			int vertexCount = shape.getVertexCount();
 

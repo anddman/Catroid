@@ -81,7 +81,6 @@ public class PhysicsShapeUpdater {
 		lookDataRegistrationMap.get(registration.getLookData()).remove(registration);
 	}
 
-
 	private class Registration {
 
 		private LookData lookData;

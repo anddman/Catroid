@@ -98,7 +98,7 @@ public final class PhysicsShapeBuilderStrategyFastHull implements PhysicsShapeBu
 			removeNonConvexPoints(convexHull, firstPoint);
 		}
 
-		return devideShape(convexHull.toArray(new Vector2[convexHull.size()]), width, height);
+		return divideShape(convexHull.toArray(new Vector2[convexHull.size()]), width, height);
 	}
 
 	private void addPoint(Stack<Vector2> convexHull, Vector2 point) {
@@ -127,36 +127,36 @@ public final class PhysicsShapeBuilderStrategyFastHull implements PhysicsShapeBu
 		return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) < 0;
 	}
 
-	private Shape[] devideShape(Vector2[] convexpoints, int width, int height) {
-		for (int index = 0; index < convexpoints.length; index++) {
-			Vector2 point = convexpoints[index];
+	private Shape[] divideShape(Vector2[] convexPoints, int width, int height) {
+		for (int index = 0; index < convexPoints.length; index++) {
+			Vector2 point = convexPoints[index];
 			point.x -= width / 2.0f;
 			point.y = height / 2.0f - point.y;
-			convexpoints[index] = PhysicsWorldConverter.convertCatroidToBox2dVector(point);
+			convexPoints[index] = PhysicsWorldConverter.convertCatroidToBox2dVector(point);
 		}
 
-		if (convexpoints.length < 9) {
+		if (convexPoints.length < 9) {
 			PolygonShape polygon = new PolygonShape();
-			polygon.set(convexpoints);
+			polygon.set(convexPoints);
 			return new Shape[] { polygon };
 		}
 
-		List<Shape> shapes = new ArrayList<Shape>(convexpoints.length / 6 + 1);
+		List<Shape> shapes = new ArrayList<Shape>(convexPoints.length / 6 + 1);
 		List<Vector2> pointsPerShape = new ArrayList<Vector2>(8);
 
-		Vector2 rome = convexpoints[0];
+		Vector2 rome = convexPoints[0];
 		int index = 1;
-		while (index < convexpoints.length - 1) {
+		while (index < convexPoints.length - 1) {
 			int k = index + 7;
 
-			int remainingPointsCount = convexpoints.length - index;
+			int remainingPointsCount = convexPoints.length - index;
 			if (remainingPointsCount > 7 && remainingPointsCount < 9) {
 				k -= 3;
 			}
 
 			pointsPerShape.add(rome);
-			for (; index < k && index < convexpoints.length; index++) {
-				pointsPerShape.add(convexpoints[index]);
+			for (; index < k && index < convexPoints.length; index++) {
+				pointsPerShape.add(convexPoints[index]);
 			}
 
 			PolygonShape polygon = new PolygonShape();

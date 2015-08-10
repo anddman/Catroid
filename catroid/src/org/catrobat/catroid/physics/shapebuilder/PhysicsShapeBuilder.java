@@ -120,7 +120,9 @@ public class PhysicsShapeBuilder {
 				//Pixmap.setFilter(Pixmap.Filter.BiLinear);
 				Pixmap scaledPixmap = new Pixmap(scaledWidth, scaledHeight, lookDataPixmap.getFormat());
 				scaledPixmap.drawPixmap(lookDataPixmap, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-				scaledShapes = strategy.build(scaledPixmap, 1.0f);
+				synchronized (this) {
+					scaledShapes = strategy.build(scaledPixmap, 1.0f);
+				}
 				// scale parameter of fastHull's build function not used -> scale shapes
 				scaledShapes = scaleShapes(scaledShapes, 1 / performanceScaleFactor);
 			}
