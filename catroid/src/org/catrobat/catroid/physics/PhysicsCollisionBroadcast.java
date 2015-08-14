@@ -31,6 +31,7 @@ import java.util.List;
 
 public class PhysicsCollisionBroadcast {
 	//private static final String TAG = PhysicsCollisionBroadcast.class.getSimpleName();
+	public static final String COLLISION_MESSAGE_SPRITE_SEPARATOR = " <\0-\0> ";
 	private int contactCounter = 0;
 	private String objectName1;
 	private String objectName2;
@@ -57,10 +58,10 @@ public class PhysicsCollisionBroadcast {
 	public boolean sendBroadcast() {
 		if (objectName1 != null && objectName2 != null && !objectName1.isEmpty() && !objectName2.isEmpty()) {
 			//Log.d(TAG, "# COLLISION # :" + objectName1 + "<->" + objectName2);
-			fireEvent(objectName1 + "<->" + objectName2);
-			fireEvent(objectName2 + "<->" + objectName1);
-			fireEvent(objectName1 + "<->anybody");
-			fireEvent(objectName2 + "<->anybody");
+			fireEvent(objectName1 + COLLISION_MESSAGE_SPRITE_SEPARATOR + objectName2);
+			fireEvent(objectName2 + COLLISION_MESSAGE_SPRITE_SEPARATOR + objectName1);
+			fireEvent(objectName1 + COLLISION_MESSAGE_SPRITE_SEPARATOR + "anybody");
+			fireEvent(objectName2 + COLLISION_MESSAGE_SPRITE_SEPARATOR + "anybody");
 			return true;
 		}
 		return false;

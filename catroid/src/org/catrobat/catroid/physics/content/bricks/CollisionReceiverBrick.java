@@ -44,12 +44,12 @@ import org.catrobat.catroid.content.Script;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.bricks.Brick;
 import org.catrobat.catroid.content.bricks.ScriptBrick;
+import org.catrobat.catroid.physics.PhysicsCollisionBroadcast;
 
 import java.util.List;
 
 public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMessage, Cloneable {
 	private static final long serialVersionUID = 1L;
-	public static final String COLLISION_MESSAGE_SPRITE_SEPARATOR = "<->"; //TODO: move to wherever appropriate
 
 	private CollisionScript receiveScript;
 	private transient String collisionSpriteName;
@@ -157,13 +157,14 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 		String spriteName = ProjectManager.getInstance().getCurrentSprite().getName();
 		messageAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item);
 		messageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		messageAdapter.add(spriteName + COLLISION_MESSAGE_SPRITE_SEPARATOR + context.getString(R.string.collision_with_anybody));
+		messageAdapter.add(spriteName + PhysicsCollisionBroadcast.COLLISION_MESSAGE_SPRITE_SEPARATOR + context.getString(R.string.collision_with_anybody));
 		int resources = Brick.NO_RESOURCES;
 		for (Sprite sprite : project.getSpriteList()) {
 			if (!spriteName.equals(sprite.getName())) {
 				resources |= sprite.getRequiredResources();
 				if ((resources & Brick.PHYSIC) > 0 && messageAdapter.getPosition(sprite.getName()) < 0) {
-					messageAdapter.add(spriteName + COLLISION_MESSAGE_SPRITE_SEPARATOR + sprite.getName());
+					messageAdapter.add(spriteName + PhysicsCollisionBroadcast.COLLISION_MESSAGE_SPRITE_SEPARATOR + sprite
+							.getName());
 					resources &= ~Brick.PHYSIC;
 				}
 			}

@@ -27,7 +27,7 @@ import android.widget.ArrayAdapter;
 
 import org.catrobat.catroid.R;
 import org.catrobat.catroid.content.BroadcastScript;
-import org.catrobat.catroid.physics.content.bricks.CollisionReceiverBrick;
+import org.catrobat.catroid.physics.PhysicsCollisionBroadcast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,7 +86,8 @@ public final class MessageContainer {
 	}
 
 	private static void addMessageToAdapter(String message) {
-		if (messageAdapter != null && (messageAdapter.getPosition(message) < 0) && !message.contains(CollisionReceiverBrick.COLLISION_MESSAGE_SPRITE_SEPARATOR)) {
+		if (messageAdapter != null && (messageAdapter.getPosition(message) < 0) && !message.contains(PhysicsCollisionBroadcast
+				.COLLISION_MESSAGE_SPRITE_SEPARATOR)) {
 			messageAdapter.add(message);
 		}
 	}
@@ -121,7 +122,14 @@ public final class MessageContainer {
 	}
 
 	public static String getFirst(Context context) {
-		return getMessageAdapter(context).getItem(1);
+		ArrayAdapter<String> messageAdapter = getMessageAdapter(context);
+		int size = messageAdapter.getCount();
+		if (messageAdapter.getCount() > 1) {
+			return getMessageAdapter(context).getItem(1);
+		} else if (size == 1) {
+			return getMessageAdapter(context).getItem(0);
+		}
+		return "message";
 	}
 
 	public static void removeUnusedMessages(List<String> usedMessages) {
