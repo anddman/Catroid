@@ -22,6 +22,8 @@
  */
 package org.catrobat.catroid.physics.shapebuilder;
 
+import android.util.Log;
+
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
@@ -35,78 +37,117 @@ import java.util.Stack;
 
 public final class PhysicsShapeBuilderStrategyFastHull implements PhysicsShapeBuilderStrategy {
 
+	private static final String TAG = PhysicsShapeBuilderStrategyFastHull.class.getSimpleName();
 	private static final int MINIMUM_PIXEL_ALPHA_VALUE = 1;
 
 	@Override
-	public Shape[] build(Pixmap pixmap, float scale) {
-		if (pixmap == null) {
-			return null;
-		}
+	public synchronized Shape[] build(final Pixmap pixmap, final float scale) {
+		synchronized (pixmap) {
+			if (pixmap == null) {
+				return null;
+			}
 
-		int width = pixmap.getWidth();
-		int height = pixmap.getHeight();
-		float coordinateAdjustmentValue = 1.0f;
-		Stack<Vector2> convexHull = new Stack<Vector2>();
+			int width = pixmap.getWidth();
+			int height = pixmap.getHeight();
+			float coordinateAdjustmentValue = 1.0f;
+			Stack<Vector2> convexHull = new Stack<Vector2>();
 
-		Vector2 point = new Vector2(width, height);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < point.x; x++) {
-				if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
-					point = new Vector2(x, y);
-					addPoint(convexHull, point);
-					break;
+			Vector2 point = new Vector2(width, height);
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < point.x; x++) {
+					if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
+						point = new Vector2(x, y);
+						addPoint(convexHull, point);
+						break;
+					}
 				}
 			}
-		}
 
-		if (convexHull.isEmpty()) {
-			return null;
-		}
+			if (convexHull.isEmpty()) {
+				return null;
+			}
 
-		for (int x = (int) point.x; x < width; x++) {
-			for (int y = height - 1; y > point.y; y--) {
-				if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
-					point = new Vector2(x, y);
-					addPoint(convexHull, new Vector2(x, y + coordinateAdjustmentValue));
-					break;
+			for (int x = (int) point.x; x < width; x++) {
+				for (int y = height - 1; y > point.y; y--) {
+					if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
+						point = new Vector2(x, y);
+						addPoint(convexHull, new Vector2(x, y + coordinateAdjustmentValue));
+						break;
+					}
 				}
 			}
-		}
 
-		Vector2 firstPoint = convexHull.firstElement();
-		for (int y = (int) point.y; y >= firstPoint.y; y--) {
-			for (int x = width - 1; x > point.x; x--) {
-				if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
-					point = new Vector2(x, y);
-					addPoint(convexHull, new Vector2(x + coordinateAdjustmentValue, y + coordinateAdjustmentValue));
-					break;
+			Vector2 firstPoint = convexHull.firstElement();
+			for (int y = (int) point.y; y >= firstPoint.y; y--) {
+				for (int x = width - 1; x > point.x; x--) {
+					if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
+						point = new Vector2(x, y);
+						addPoint(convexHull, new Vector2(x + coordinateAdjustmentValue, y + coordinateAdjustmentValue));
+						break;
+					}
 				}
 			}
-		}
 
-		for (int x = (int) point.x; x > firstPoint.x; x--) {
-			for (int y = (int) firstPoint.y; y < point.y; y++) {
-				if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
-					point = new Vector2(x, y);
-					addPoint(convexHull, new Vector2(x + coordinateAdjustmentValue, y));
-					break;
+			for (int x = (int) point.x; x > firstPoint.x; x--) {
+				for (int y = (int) firstPoint.y; y < point.y; y++) {
+					if ((pixmap.getPixel(x, y) & 0xff) >= MINIMUM_PIXEL_ALPHA_VALUE) {
+						point = new Vector2(x, y);
+						addPoint(convexHull, new Vector2(x + coordinateAdjustmentValue, y));
+						break;
+					}
 				}
 			}
-		}
 
-		if (convexHull.size() > 2) {
-			removeNonConvexPoints(convexHull, firstPoint);
-		}
+			if (convexHull.size() > 2) {
+				removeNonConvexPoints(convexHull, firstPoint);
+			}
 
-		return divideShape(convexHull.toArray(new Vector2[convexHull.size()]), width, height);
+			Log.d(TAG, "pixmap: " + pixmap.getWidth() + "\t x \t" + pixmap.getHeight());
+			for (Vector2 v : convexHull) {
+				if (Math.abs(v.x) > pixmap.getWidth() || Math.abs(v.y) > pixmap.getHeight()) {
+					Log.w(TAG, "undiv-outlier: " + v.x + "\t " + v.y);
+				}
+			}
+
+			Shape[] dividedShapes = divideShape(convexHull.toArray(new Vector2[convexHull.size()]), width, height);
+
+			Vector2 tmp = new Vector2();
+			Vector2 v;
+			PolygonShape p;
+			List<Vector2> outliers = new ArrayList<Vector2>();
+			for (Shape s : dividedShapes) {
+				p = (PolygonShape) s;
+				for (int i = 0; i < p.getVertexCount(); i++) {
+					p.getVertex(i, tmp);
+					v = PhysicsWorldConverter.convertBox2dToNormalVector(tmp);
+					if (Math.abs(v.x) > (pixmap.getWidth()/2)+1 || Math.abs(v.y) > (pixmap.getHeight()/2)+1) {
+						Log.w(TAG, "div-outlier: " + v.x + "\t " + v.y);
+						outliers.add(tmp);
+					}
+				}
+				//if (outliers.size() > 0) {
+				//	List<Vector2> vertices = new ArrayList<>();
+				//	PolygonShape cleaned = new PolygonShape();
+				//	for (int i = 0; i < p.getVertexCount(); i++) {
+				//		p.getVertex(i, tmp);
+				//		if (!outliers.contains(tmp)) {
+				//			vertices.add(tmp);
+				//		}
+				//	}
+				//	cleaned.set(vertices.toArray(new Vector2[3]));
+				//}
+			}
+
+			return dividedShapes;
+		}
 	}
 
-	private void addPoint(Stack<Vector2> convexHull, Vector2 point) {
+	private synchronized void addPoint(Stack<Vector2> convexHull, Vector2 point) {
 		removeNonConvexPoints(convexHull, point);
 		convexHull.add(point);
 	}
 
-	private void removeNonConvexPoints(Stack<Vector2> convexHull, Vector2 newTop) {
+	private synchronized void removeNonConvexPoints(Stack<Vector2> convexHull, Vector2 newTop) {
 		while (convexHull.size() > 1) {
 			Vector2 top = convexHull.peek();
 			Vector2 secondTop = convexHull.get(convexHull.size() - 2);
@@ -123,11 +164,11 @@ public final class PhysicsShapeBuilderStrategyFastHull implements PhysicsShapeBu
 		}
 	}
 
-	private boolean leftTurn(Vector2 a, Vector2 b, Vector2 c) {
+	private synchronized boolean leftTurn(Vector2 a, Vector2 b, Vector2 c) {
 		return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) < 0;
 	}
 
-	private Shape[] divideShape(Vector2[] convexPoints, int width, int height) {
+	private synchronized Shape[] divideShape(Vector2[] convexPoints, int width, int height) {
 		for (int index = 0; index < convexPoints.length; index++) {
 			Vector2 point = convexPoints[index];
 			point.x -= width / 2.0f;

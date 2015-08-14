@@ -374,7 +374,7 @@ public class StageListener implements ApplicationListener {
 			 * future EMMA - update will fix the bugs.
 			 */
 			if (!DYNAMIC_SAMPLING_RATE_FOR_ACTIONS) {
-				physicsWorld.step(deltaTime); //TODO[physics]
+				physicsWorld.step(deltaTime); // TODO[physics]
 				stage.act(deltaTime);
 			} else {
 				float optimizedDeltaTime = deltaTime / deltaActionTimeDivisor;
@@ -421,6 +421,10 @@ public class StageListener implements ApplicationListener {
 
 		if (PhysicsDebugSettings.Render.RENDER_PHYSIC_OBJECT_LABELING) {
 			printPhysicsLabelOnScreen();
+		}
+
+		if (!finished) {
+			physicsWorld.updateShapes();
 		}
 
 		if (PhysicsDebugSettings.Render.RENDER_COLLISION_FRAMES && !finished) {

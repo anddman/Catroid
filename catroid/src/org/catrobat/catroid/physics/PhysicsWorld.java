@@ -32,6 +32,7 @@ import com.badlogic.gdx.physics.box2d.Shape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 
+import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.content.Look;
 import org.catrobat.catroid.content.Sprite;
@@ -127,6 +128,9 @@ public class PhysicsWorld {
 					PhysicsDebugSettings.Render.RENDER_INACTIVE_BODIES, PhysicsDebugSettings.Render.RENDER_VELOCITIES,
 					PhysicsDebugSettings.Render.RENDER_CONTACTS);
 		}
+		//if (PhysicsShapeUpdater.instance.hasUpdatesPending()) {
+		//	PhysicsShapeUpdater.instance.doUpdateShapes();
+		//}
 		renderer.render(world, perspectiveMatrix.scl(PhysicsWorld.RATIO));
 	}
 
@@ -138,14 +142,25 @@ public class PhysicsWorld {
 		return world.getGravity();
 	}
 
-	public synchronized void changeLook(PhysicsObject physicsObject, Look look) {
-		float scaleFactor = look.getSizeInUserInterfaceDimensionUnit() / 100f;
-		Shape[] shapes = null;
-		if (look.getLookData() != null && look.getLookData().getLookFileName() != null) {
-			PhysicsShapeUpdater.instance.register(look.getLookData(), physicsObject, look.getScaleX(), PhysicsShapeBuilder.getAccuracyLevel(scaleFactor)); // TODO[physics]: adjust for separate X/Y scaling
-			shapes = physicsShapeBuilder.getShape(look.getLookData(), scaleFactor);
+	public void updateShapes() {
+		PhysicsShapeUpdater.instance.doUpdateShapes();
+	}
+
+	public void changeLook(PhysicsObject physicsObject, Look look) {
+		synchronized (physicsObject) {
+			float scaleFactor = look.getSizeInUserInterfaceDimensionUnit() / 100f;
+			LookData lookData = look.getLookData();
+			Shape[] shapes = null;
+			if (lookData != null && lookData.getLookFileName() != null) {
+				if (!physicsShapeBuilder.isAppropriateShapeAvailable(lookData, scaleFactor)) {
+					PhysicsShapeUpdater.instance.register(lookData, physicsObject, scaleFactor, PhysicsShapeBuilder.getAccuracyLevel(scaleFactor)); // TODO[physics]: adjust for separate X/Y scaling
+				} else {
+					PhysicsShapeUpdater.instance.unregister(physicsObject);
+				}
+				shapes = physicsShapeBuilder.getShape(lookData, scaleFactor);
+			}
+			physicsObject.setShape(shapes);
 		}
-		physicsObject.setShape(shapes);
 	}
 
 	public PhysicsObject getPhysicsObject(Sprite sprite) {
@@ -165,25 +180,29 @@ public class PhysicsWorld {
 
 	private PhysicsObject createPhysicsObject(Sprite sprite) {
 		BodyDef bodyDef = new BodyDef();
-		return new PhysicsObject(world.createBody(bodyDef), sprite);
+		synchronized (world) {
+			return new PhysicsObject(world.createBody(bodyDef), sprite);
+		}
 	}
 
 	public void bouncedOnEdge(Sprite sprite, PhysicsBoundaryBox.BoundaryBoxIdentifier boundaryBoxIdentifier) {
-		if (physicsObjects.containsKey(sprite)) {
-			PhysicsObject physicsObject = physicsObjects.get(sprite);
-			switch (boundaryBoxIdentifier) {
-				case BBI_HORIZONTAL:
-					if (activeHorizontalBounces.remove(sprite) && !activeVerticalBounces.contains(sprite)) {
-						physicsObject.setIfOnEdgeBounce(false, sprite);
-						//Log.d(TAG, "ifOnEdgeBounce deactivated BBI_HORIZONTAL");
-					}
-					break;
-				case BBI_VERTICAL:
-					if (activeVerticalBounces.remove(sprite) && !activeHorizontalBounces.contains(sprite)) {
-						physicsObject.setIfOnEdgeBounce(false, sprite);
-						//Log.d(TAG, "ifOnEdgeBounce deactivated BBI_VERTICAL");
-					}
-					break;
+		synchronized (physicsObjects) {
+			if (physicsObjects.containsKey(sprite)) {
+				PhysicsObject physicsObject = physicsObjects.get(sprite);
+				switch (boundaryBoxIdentifier) {
+					case BBI_HORIZONTAL:
+						if (activeHorizontalBounces.remove(sprite) && !activeVerticalBounces.contains(sprite)) {
+							physicsObject.setIfOnEdgeBounce(false, sprite);
+							//Log.d(TAG, "ifOnEdgeBounce deactivated BBI_HORIZONTAL");
+						}
+						break;
+					case BBI_VERTICAL:
+						if (activeVerticalBounces.remove(sprite) && !activeHorizontalBounces.contains(sprite)) {
+							physicsObject.setIfOnEdgeBounce(false, sprite);
+							//Log.d(TAG, "ifOnEdgeBounce deactivated BBI_VERTICAL");
+						}
+						break;
+				}
 			}
 		}
 	}

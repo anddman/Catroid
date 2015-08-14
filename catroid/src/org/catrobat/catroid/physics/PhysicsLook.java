@@ -22,6 +22,8 @@
  */
 package org.catrobat.catroid.physics;
 
+import android.util.Log;
+
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 
@@ -29,11 +31,13 @@ import org.catrobat.catroid.ProjectManager;
 import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.content.Look;
 import org.catrobat.catroid.content.Sprite;
+import org.catrobat.catroid.physics.shapebuilder.PhysicsShapeUpdater;
 
 import java.util.LinkedList;
 
 public class PhysicsLook extends Look {
 
+	private static final String TAG = PhysicsLook.class.getSimpleName();
 	public static final float SCALE_FACTOR_ACCURACY = 10000.0f;
 	public static final float MINIMUM_PHYSICS_OBJECT_SIZE = 8.0f;
 
@@ -53,10 +57,12 @@ public class PhysicsLook extends Look {
 
 	@Override
 	public void setLookData(LookData lookData) {
-		super.setLookData(lookData);
-		PhysicsWorld physicsWorld = ProjectManager.getInstance().getCurrentProject().getPhysicsWorld();
-		physicsWorld.changeLook(physicsObject, this);
-		updatePhysicsObjectState(true);
+		synchronized (this) {
+			super.setLookData(lookData);
+			PhysicsWorld physicsWorld = ProjectManager.getInstance().getCurrentProject().getPhysicsWorld();
+			physicsWorld.changeLook(physicsObject, this);
+			updatePhysicsObjectState(true);
+		}
 	}
 
 	@Override
@@ -155,7 +161,7 @@ public class PhysicsLook extends Look {
 		}
 	}
 
-	public void updatePhysicsObjectState(boolean record) {
+	public synchronized void updatePhysicsObjectState(boolean record) {
 		physicsObjectStateHandler.update(record);
 	}
 
@@ -170,19 +176,19 @@ public class PhysicsLook extends Look {
 		physicsObjectStateHandler.update(true);
 	}
 
-	public boolean isHangedUp() {
+	public synchronized boolean isHangedUp() {
 		return physicsObjectStateHandler.isHangedUp();
 	}
 
-	public void setNonColliding(boolean nonColliding) {
+	public synchronized void setNonColliding(boolean nonColliding) {
 		physicsObjectStateHandler.setNonColliding(nonColliding);
 	}
 
-	public void startGlide() {
+	public synchronized void startGlide() {
 		physicsObjectStateHandler.activateGlideTo();
 	}
 
-	public void stopGlide() {
+	public synchronized void stopGlide() {
 		physicsObjectStateHandler.deactivateGlideTo();
 	}
 
@@ -191,7 +197,7 @@ public class PhysicsLook extends Look {
 	}
 
 	@Override
-	public void draw(Batch batch, float parentAlpha) {
+	public synchronized void draw(Batch batch, float parentAlpha) {
 		physicsObjectStateHandler.checkHangup(true);
 		super.draw(batch, parentAlpha);
 	}
@@ -245,6 +251,8 @@ public class PhysicsLook extends Look {
 				@Override
 				public boolean isTrue() {
 					Vector2 dimensions = physicsObject.getBoundaryBoxDimensions();
+					//Log.d(TAG, "sizeCondition:"+(dimensions.x < MINIMUM_PHYSICS_OBJECT_SIZE || dimensions.y <
+					//		MINIMUM_PHYSICS_OBJECT_SIZE));
 					return dimensions.x < MINIMUM_PHYSICS_OBJECT_SIZE || dimensions.y < MINIMUM_PHYSICS_OBJECT_SIZE;
 				}
 			};
@@ -288,7 +296,7 @@ public class PhysicsLook extends Look {
 			fixConditions.add(glideToCondition);
 		}
 
-		private boolean checkInvisible() {
+		private synchronized boolean checkInvisible() {
 			if (!PhysicsLook.super.isVisible()) {
 				invisible = true;
 				return invisible;
@@ -310,7 +318,7 @@ public class PhysicsLook extends Look {
 			return shouldBeInvisible;
 		}
 
-		private boolean checkHangup(boolean record) {
+		private synchronized boolean checkHangup(boolean record) {
 			boolean shouldBeHangedUp = false;
 			for (PhysicsObjectStateCondition hangupCondition : hangupConditions) {
 				if (hangupCondition.isTrue()) {
@@ -331,7 +339,7 @@ public class PhysicsLook extends Look {
 			return hangedUp;
 		}
 
-		private boolean checkNonColliding(boolean record) {
+		private synchronized boolean checkNonColliding(boolean record) {
 			boolean shouldBeNonColliding = false;
 			for (PhysicsObjectStateCondition nonCollideCondition : nonCollidingConditions) {
 				if (nonCollideCondition.isTrue()) {
@@ -352,7 +360,7 @@ public class PhysicsLook extends Look {
 			return nonColliding;
 		}
 
-		private boolean checkFixed(boolean record) {
+		private synchronized boolean checkFixed(boolean record) {
 			boolean shouldBeFixed = false;
 			for (PhysicsObjectStateCondition fixedCondition : fixConditions) {
 				if (fixedCondition.isTrue()) {
@@ -373,38 +381,38 @@ public class PhysicsLook extends Look {
 			return fixed;
 		}
 
-		public void update(boolean record) {
+		public synchronized void update(boolean record) {
 			checkInvisible();
 			checkHangup(record);
 			checkNonColliding(record);
 			checkFixed(record);
 		}
 
-		public void activateGlideTo() {
+		public synchronized void activateGlideTo() {
 			if (!glideToIsActive) {
 				glideToIsActive = true;
 				updatePhysicsObjectState(true);
 			}
 		}
 
-		public void deactivateGlideTo() {
+		public synchronized void deactivateGlideTo() {
 			glideToIsActive = false;
 			updatePhysicsObjectState(true);
 		}
 
-		public boolean isInvisible() {
+		public synchronized boolean isInvisible() {
 			return this.invisible;
 		}
 
-		public void setInvisible() {
+		public synchronized void setInvisible() {
 			this.invisible = invisible;
 		}
 
-		public boolean isHangedUp() {
+		public synchronized boolean isHangedUp() {
 			return hangedUp;
 		}
 
-		public void setNonColliding(boolean nonColliding) {
+		public synchronized void setNonColliding(boolean nonColliding) {
 			if (this.nonColliding != nonColliding) {
 				this.nonColliding = nonColliding;
 				update(true);

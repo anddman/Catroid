@@ -32,42 +32,55 @@ import com.badlogic.gdx.physics.box2d.Shape;
 import org.catrobat.catroid.common.LookData;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 public class PhysicsShapeBuilder {
 
 	public static final int BASE_SHAPE_BUILDER_THREAD_PRIORITY = 3;
 	public static final float[] ACCURACY_LEVELS = { 0.05f, 0.125f, 0.25f, 0.50f, 0.75f, 1.0f, 4.0f };
-	public static final float MAX_ORIGINAL_PIXMAP_SIZE = 256.0f;
+	public static final float MAX_ORIGINAL_PIXMAP_SIZE = 512;
 	public static final float COORDINATE_SCALING_DECIMAL_ACCURACY = 100.0f;
 	private static final String TAG = PhysicsShapeBuilder.class.getSimpleName();
+	private static BaseShapeBuilder baseShapeBuilder;
+	protected static Thread baseShapeBuilderThread;
 	private final Map<String, Shape[]> shapeMap = new HashMap<String, Shape[]>();
-	private final Map<String, Thread> activeShapeBuilderThreadMap = new HashMap<String, Thread>();
+
 	private PhysicsShapeBuilderStrategy strategy = new PhysicsShapeBuilderStrategyFastHull();
 
 	public PhysicsShapeBuilder() {
+		if (baseShapeBuilder != null) {
+			baseShapeBuilder.abort();
+		}
+		baseShapeBuilder = new BaseShapeBuilder();
+		PhysicsShapeUpdater.instance.clearAll();
 	}
 
-	public synchronized Shape[] getShape(LookData lookData, float scaleFactor) {
+	public Shape[] getShape(LookData lookData, float scaleFactor) {
 		float accuracyLevel = getAccuracyLevel(scaleFactor);
-		String key = getShapeKey(lookData, accuracyLevel);
+		String shapeKey = getShapeKey(lookData, accuracyLevel);
+		Shape[] shapes;
 
-		if (shapeMap.containsKey(key)) {
-			Log.d(TAG, "PhysicsShapeBuilder.getShape(): reusing shape " + key);
-		} else if (!activeShapeBuilderThreadMap.containsKey(getThreadKey(lookData))) {
-			float sizeAdjustmentScaleFactor = getSizeAdjustmentScaleFactor(lookData.getPixmap());
-			buildShape(lookData, sizeAdjustmentScaleFactor, ACCURACY_LEVELS[0]);
-			buildShape(lookData, sizeAdjustmentScaleFactor, getAccuracyLevel(scaleFactor));
-			BaseShapeBuilder baseShapeBuilder = new BaseShapeBuilder(this, lookData, sizeAdjustmentScaleFactor);
-			Thread baseShapeBuilderThread = new Thread(baseShapeBuilder, "PhysicsBaseShapeBuilderThread");
-			baseShapeBuilderThread.setPriority(BASE_SHAPE_BUILDER_THREAD_PRIORITY);
-			baseShapeBuilderThread.start();
-			activeShapeBuilderThreadMap.put(getThreadKey(lookData), baseShapeBuilderThread);
+		synchronized (shapeMap) {
+			if (shapeMap.containsKey(shapeKey)) {
+				Log.d(TAG, "reusing shape:\t lookData: " + lookData.getLookName() + " : " + shapeKey);
+			} else {
+				float sizeAdjustmentScaleFactor = getSizeAdjustmentScaleFactor(lookData.getPixmap());
+				buildShape(lookData, sizeAdjustmentScaleFactor, ACCURACY_LEVELS[0]);
+				baseShapeBuilder.addToQueue(lookData, accuracyLevel, sizeAdjustmentScaleFactor);
+				if (baseShapeBuilderThread == null || !baseShapeBuilderThread.isAlive()) {
+					baseShapeBuilderThread = new Thread(baseShapeBuilder, "PhysicsBaseShapeBuilderThread");
+					baseShapeBuilderThread.setPriority(BASE_SHAPE_BUILDER_THREAD_PRIORITY);
+					baseShapeBuilderThread.start();
+					Log.d(TAG, "baseShapeBuilderThread (re-)started");
+				}
+			}
+			shapes = shapeMap.get(shapeKey);
 		}
 
-		Shape[] shapes = shapeMap.get(key);
 		if (shapes == null) {
 			int accuracyLevelIndex = getAccuracyLevelIndex(accuracyLevel);
 			if (accuracyLevelIndex > 0) {
@@ -101,34 +114,47 @@ public class PhysicsShapeBuilder {
 	}
 
 	public Shape[] buildShape(LookData lookData, float sizeAdjustmentScaleFactor, float accuracy) {
+		return buildShape(lookData, sizeAdjustmentScaleFactor, accuracy, false);
+	}
+
+	public Shape[] buildShape(LookData lookData, float sizeAdjustmentScaleFactor, float accuracy, boolean
+			informUpdater) {
 		Pixmap lookDataPixmap = lookData.getPixmap();
 		if (lookDataPixmap == null) {
+			Log.w(TAG, "lookDataPixmap for look " + lookData.getLookName() + " is NULL");
 			return null;
 		}
 
-		if (!shapeMap.containsKey(getShapeKey(lookData, accuracy))) {
-			Log.d(TAG, "building shape: " + lookData.getLookName());
-			int width = lookDataPixmap.getWidth();
-			int height = lookDataPixmap.getHeight();
-			float performanceScaleFactor = sizeAdjustmentScaleFactor * accuracy;
-			int scaledWidth = Math.round(width * performanceScaleFactor);
-			int scaledHeight = Math.round(height * performanceScaleFactor);
+		synchronized (shapeMap) {
+			if (!shapeMap.containsKey(getShapeKey(lookData, accuracy))) {
+				Log.d(TAG, "building shape:\t acc: " + accuracy + "\t look: " + lookData.getLookName());
+				int width = lookDataPixmap.getWidth();
+				int height = lookDataPixmap.getHeight();
+				float performanceScaleFactor = sizeAdjustmentScaleFactor * accuracy;
+				int scaledWidth = Math.round(width * performanceScaleFactor);
+				int scaledHeight = Math.round(height * performanceScaleFactor);
 
-			Shape[] scaledShapes = null;
-			if (scaledWidth > 0 && scaledHeight > 0) {
-				Pixmap.setFilter(Pixmap.Filter.NearestNeighbour);
-				//Pixmap.setFilter(Pixmap.Filter.BiLinear);
-				Pixmap scaledPixmap = new Pixmap(scaledWidth, scaledHeight, lookDataPixmap.getFormat());
-				scaledPixmap.drawPixmap(lookDataPixmap, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-				synchronized (this) {
+				Shape[] scaledShapes = null;
+				if (scaledWidth > 0 && scaledHeight > 0) {
+					Pixmap.setFilter(Pixmap.Filter.NearestNeighbour);
+					//Pixmap.setFilter(Pixmap.Filter.BiLinear);
+					Pixmap scaledPixmap = new Pixmap(scaledWidth, scaledHeight, lookDataPixmap.getFormat());
+					scaledPixmap.drawPixmap(lookDataPixmap, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
 					scaledShapes = strategy.build(scaledPixmap, 1.0f);
+					// scale parameter of fastHull's build function not used -> scale shapes
+					scaledShapes = scaleShapes(scaledShapes, 1 / performanceScaleFactor);
 				}
-				// scale parameter of fastHull's build function not used -> scale shapes
-				scaledShapes = scaleShapes(scaledShapes, 1 / performanceScaleFactor);
+				shapeMap.put(getShapeKey(lookData, accuracy), scaledShapes);
+				Log.d(TAG, "shape built:\t acc: " + accuracy + "\t look: " + lookData.getLookName() + " : " +
+						getShapeKey(lookData, accuracy));
+				if (informUpdater) {
+					PhysicsShapeUpdater.instance.inform(lookData, scaledShapes, accuracy);
+				}
+				if (scaledShapes == null) {
+					Log.w(TAG, "scaledShapes for lookData " + lookData.getLookName() + " is NULL");
+				}
+				return scaledShapes;
 			}
-			shapeMap.put(getShapeKey(lookData, accuracy), scaledShapes);
-			PhysicsShapeUpdater.instance.update(lookData, scaledShapes, accuracy);
-			return scaledShapes;
 		}
 		return null;
 	}
@@ -149,13 +175,14 @@ public class PhysicsShapeBuilder {
 		return 0;
 	}
 
-	private String getShapeKey(LookData lookData, float scaleFactor) {
-		return lookData.getChecksum() + (int) (scaleFactor * 100);
+	private static String getShapeKey(LookData lookData, float scaleFactor) {
+		return lookData.getChecksum() + String.format("%3s", String.valueOf((int)(scaleFactor * 100))).replace(" ",
+				"0");
 	}
 
 	public static Shape[] scaleShapes(Shape[] shapes, float scaleFactor) {
 		List<Shape> scaledShapes = new ArrayList<>();
-		if (scaleFactor == 0.0f) {
+		if (Float.compare(scaleFactor, 0.0f) == 0) {
 			return null;
 		}
 
@@ -191,39 +218,104 @@ public class PhysicsShapeBuilder {
 		return Math.round(coord * factor * COORDINATE_SCALING_DECIMAL_ACCURACY) / COORDINATE_SCALING_DECIMAL_ACCURACY;
 	}
 
-	public String getThreadKey(LookData lookData) {
-		return lookData.getChecksum();
-	}
-
-	public void cleanupFinishedThread(LookData lookData) {
-		activeShapeBuilderThreadMap.put(getThreadKey(lookData), null);
+	public boolean isAppropriateShapeAvailable(LookData lookData, float scale) {
+		return shapeMap.containsKey(getShapeKey(lookData, getAccuracyLevel(scale)));
 	}
 
 	public boolean isThreadRunning(LookData lookData) {
-		return activeShapeBuilderThreadMap.get(getThreadKey(lookData)) != null;
+		return baseShapeBuilderThread != null && baseShapeBuilderThread.isAlive();
 	}
 
-	private static class BaseShapeBuilder implements Runnable {
+	private class BaseShapeBuilder implements Runnable {
 
-		private PhysicsShapeBuilder physicsShapeBuilder;
-		private LookData lookData;
-		private float sizeAdjustmentScaleFactor;
+		private final Comparator<QueuePosition> queuePositionComparator = new Comparator<QueuePosition>() {
+			@Override
+			public int compare(QueuePosition q1, QueuePosition q2) {
+				return Float.compare(q1.getAccuracyLevel(), q2.getAccuracyLevel());
+			}
+		};
+		private PriorityQueue<QueuePosition> highPriorityQueue = new PriorityQueue<QueuePosition>();
+		private PriorityQueue<QueuePosition> lowPriorityQueue = new PriorityQueue<QueuePosition>(ACCURACY_LEVELS.length,
+				queuePositionComparator);
+		private boolean abort = false;
 
-		public BaseShapeBuilder(PhysicsShapeBuilder physicsShapeBuilder, LookData lookData, float sizeAdjustmentScaleFactor) {
-			this.physicsShapeBuilder = physicsShapeBuilder;
-			this.lookData = lookData;
-			this.sizeAdjustmentScaleFactor = sizeAdjustmentScaleFactor;
+		public BaseShapeBuilder() {
 		}
 
 		@Override
 		public void run() {
-			buildBaseShapes(lookData, sizeAdjustmentScaleFactor);
-			physicsShapeBuilder.cleanupFinishedThread(lookData);
+			while (!abort && highPriorityQueue.size() + lowPriorityQueue.size() > 0) {
+				buildBaseShapes();
+			}
+			Log.d(TAG, "baseShapeBuilderThread finished");
 		}
 
-		private void buildBaseShapes(LookData lookData, float sizeAdjustmentScaleFactor) {
+		private void buildBaseShapes() {
+			QueuePosition q;
+			while (!abort) {
+				synchronized (highPriorityQueue) {
+					q = highPriorityQueue.poll();
+				}
+				if (q != null) {
+					buildShape(q.getLookData(), q.getSizeAdjustmentScaleFactor(), q.getAccuracyLevel(), true);
+				} else {
+					break;
+				}
+			}
+			if (!abort) {
+				synchronized (lowPriorityQueue) {
+					q = lowPriorityQueue.poll();
+				}
+				if (q != null) {
+					buildShape(q.getLookData(), q.getSizeAdjustmentScaleFactor(), q.getAccuracyLevel(), true);
+				}
+			}
+		}
+
+		public void abort() {
+			this.abort = true;
+		}
+
+		public synchronized void addToQueue(LookData lookData, float accuracyLevel, float sizeAdjustmentScaleFactor) {
+			ArrayList<QueuePosition> all = new ArrayList<>(highPriorityQueue);
+			all.addAll(lowPriorityQueue);
+			for (QueuePosition q : all) {
+				if (q.getLookData() == lookData) {
+					return;
+				}
+			}
+			highPriorityQueue.add(new QueuePosition(lookData, accuracyLevel, sizeAdjustmentScaleFactor));
 			for (int i = 0; i < ACCURACY_LEVELS.length; i++) {
-				physicsShapeBuilder.buildShape(lookData, sizeAdjustmentScaleFactor, ACCURACY_LEVELS[i]);
+				lowPriorityQueue.add(new QueuePosition(lookData, ACCURACY_LEVELS[i], sizeAdjustmentScaleFactor));
+			}
+		}
+
+		private class QueuePosition implements Comparable<QueuePosition> {
+
+			private final LookData lookData;
+			private float accuracyLevel;
+			private float sizeAdjustmentScaleFactor;
+
+			public QueuePosition(LookData lookData, float accuracyLevel, float sizeAdjustmentScaleFactor) {
+				this.lookData = lookData;
+				this.accuracyLevel = accuracyLevel;
+				this.sizeAdjustmentScaleFactor = sizeAdjustmentScaleFactor;
+			}
+
+			public int compareTo(QueuePosition other) {
+				return Float.compare(this.getAccuracyLevel(), other.getAccuracyLevel());
+			}
+
+			public LookData getLookData() {
+				return this.lookData;
+			}
+
+			public float getAccuracyLevel() {
+				return this.accuracyLevel;
+			}
+
+			public float getSizeAdjustmentScaleFactor() {
+				return this.sizeAdjustmentScaleFactor;
 			}
 		}
 	}

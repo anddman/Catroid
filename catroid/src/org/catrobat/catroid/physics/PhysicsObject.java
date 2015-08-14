@@ -73,7 +73,6 @@ public class PhysicsObject {
 	private Vector2 bodyAabbUpperRight;
 	private Vector2 fixtureAabbLowerLeft;
 	private Vector2 fixtureAabbUpperRight;
-	private Vector2 tmpVertice;
 
 	private Vector2 velocity = new Vector2();
 	private float rotationSpeed = 0;
@@ -88,8 +87,6 @@ public class PhysicsObject {
 		fixtureDef.friction = PhysicsObject.DEFAULT_FRICTION;
 		fixtureDef.restitution = PhysicsObject.DEFAULT_BOUNCE_FACTOR;
 		setType(Type.NONE);
-		// --
-		tmpVertice = new Vector2();
 	}
 
 	public synchronized void setShape(Shape[] shapes) {
@@ -132,7 +129,7 @@ public class PhysicsObject {
 		return type;
 	}
 
-	public void setType(Type type) {
+	public synchronized void setType(Type type) {
 		if (this.type == type) {
 			return;
 		}
@@ -163,7 +160,7 @@ public class PhysicsObject {
 		return PhysicsWorldConverter.convertBox2dToNormalAngle(body.getAngle());
 	}
 
-	public void setDirection(float degrees) {
+	public synchronized void setDirection(float degrees) {
 		body.setTransform(body.getPosition(), PhysicsWorldConverter.convertNormalToBox2dAngle(degrees));
 	}
 
@@ -187,17 +184,17 @@ public class PhysicsObject {
 		return PhysicsWorldConverter.convertBox2dToNormalVector(body.getPosition());
 	}
 
-	public void setX(float x) {
+	public synchronized void setX(float x) {
 		body.setTransform(PhysicsWorldConverter.convertNormalToBox2dCoordinate(x), body.getPosition().y,
 				body.getAngle());
 	}
 
-	public void setY(float y) {
+	public synchronized void setY(float y) {
 		body.setTransform(body.getPosition().x, PhysicsWorldConverter.convertNormalToBox2dCoordinate(y),
 				body.getAngle());
 	}
 
-	public void setPosition(float x, float y) {
+	public synchronized void setPosition(float x, float y) {
 		x = PhysicsWorldConverter.convertNormalToBox2dCoordinate(x);
 		y = PhysicsWorldConverter.convertNormalToBox2dCoordinate(y);
 		body.setTransform(x, y, body.getAngle());
@@ -211,7 +208,7 @@ public class PhysicsObject {
 		return (float) Math.toDegrees(body.getAngularVelocity());
 	}
 
-	public void setRotationSpeed(float degreesPerSecond) {
+	public synchronized void setRotationSpeed(float degreesPerSecond) {
 		body.setAngularVelocity((float) Math.toRadians(degreesPerSecond));
 	}
 
@@ -219,7 +216,7 @@ public class PhysicsObject {
 		return PhysicsWorldConverter.convertBox2dToNormalVector(body.getLinearVelocity());
 	}
 
-	public void setVelocity(float x, float y) {
+	public synchronized void setVelocity(float x, float y) {
 		body.setLinearVelocity(PhysicsWorldConverter.convertNormalToBox2dCoordinate(x),
 				PhysicsWorldConverter.convertNormalToBox2dCoordinate(y));
 	}
@@ -232,7 +229,7 @@ public class PhysicsObject {
 		return this.fixtureDef.restitution;
 	}
 
-	public void setMass(float mass) {
+	public synchronized void setMass(float mass) {
 		this.mass = mass;
 
 		if (mass < 0) {
@@ -253,7 +250,7 @@ public class PhysicsObject {
 		return body.getMass() == 0.0f;
 	}
 
-	private void setDensity(float density) {
+	private synchronized void setDensity(float density) {
 		if (density < MIN_DENSITY) {
 			density = PhysicsObject.MIN_DENSITY;
 		}
@@ -268,7 +265,7 @@ public class PhysicsObject {
 		return fixtureDef.friction;
 	}
 
-	public void setFriction(float friction) {
+	public synchronized void setFriction(float friction) {
 		if (friction < MIN_FRICTION) {
 			friction = MIN_FRICTION;
 		}
@@ -282,7 +279,7 @@ public class PhysicsObject {
 		}
 	}
 
-	public void setBounceFactor(float bounceFactor) {
+	public synchronized void setBounceFactor(float bounceFactor) {
 		if (bounceFactor < MIN_BOUNCE_FACTOR) {
 			bounceFactor = MIN_BOUNCE_FACTOR;
 		}
@@ -292,7 +289,7 @@ public class PhysicsObject {
 		}
 	}
 
-	public void setGravityScale(float scale) {
+	public synchronized void setGravityScale(float scale) {
 		body.setGravityScale(scale);
 	}
 
@@ -300,7 +297,7 @@ public class PhysicsObject {
 		return body.getGravityScale();
 	}
 
-	public void setIfOnEdgeBounce(boolean bounce, Sprite sprite) {
+	public synchronized void setIfOnEdgeBounce(boolean bounce, Sprite sprite) {
 		if (ifOnEdgeBounce == bounce) {
 			return;
 		}
@@ -317,11 +314,11 @@ public class PhysicsObject {
 		setCollisionBits(categoryMaskRecord, maskBits);
 	}
 
-	protected void setCollisionBits(short categoryBits, short maskBits) {
+	protected synchronized void setCollisionBits(short categoryBits, short maskBits) {
 		setCollisionBits(categoryBits, maskBits, true);
 	}
 
-	protected void setCollisionBits(short categoryBits, short maskBits, boolean updateState) {
+	protected synchronized void setCollisionBits(short categoryBits, short maskBits, boolean updateState) {
 		fixtureDef.filter.categoryBits = categoryBits;
 		fixtureDef.filter.maskBits = maskBits;
 
@@ -337,7 +334,7 @@ public class PhysicsObject {
 		}
 	}
 
-	private void updateNonCollidingState() {
+	private synchronized void updateNonCollidingState() {
 		if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
 			Object look = ((Sprite) body.getUserData()).look;
 			if (look != null && look instanceof PhysicsLook) {
@@ -426,14 +423,17 @@ public class PhysicsObject {
 
 	private synchronized void calculateAabb(Fixture fixture, Transform transform) {
 		Shape.Type fixtureType;
-		try {
-			fixtureType = fixture.getType();
-		} catch (Exception e) {
-			Log.e(TAG, "Exception on Fixture.getType", e);
-			fixtureType = Shape.Type.Polygon;
+		synchronized (fixture) {
+			try {
+				fixtureType = fixture.getType();
+			} catch (Exception e) {
+				Log.e(TAG, "Exception on Fixture.getType", e);
+				fixtureType = Shape.Type.Polygon;
+			}
 		}
 		fixtureAabbLowerLeft = new Vector2(Integer.MAX_VALUE, Integer.MAX_VALUE);
 		fixtureAabbUpperRight = new Vector2(Integer.MIN_VALUE, Integer.MIN_VALUE);
+		Vector2 tmpVertice = new Vector2();
 		if (fixtureType == Shape.Type.Circle) {
 			CircleShape shape = (CircleShape) fixture.getShape();
 			float radius = shape.getRadius();
