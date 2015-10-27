@@ -31,6 +31,7 @@ import org.catrobat.catroid.R;
 import org.catrobat.catroid.common.Constants;
 import org.catrobat.catroid.common.LookData;
 import org.catrobat.catroid.common.SoundInfo;
+import org.catrobat.catroid.common.StandardProjectHandler;
 import org.catrobat.catroid.content.Project;
 import org.catrobat.catroid.content.Script;
 import org.catrobat.catroid.content.Sprite;
@@ -69,7 +70,12 @@ public class StandardProjectCreatorDefault extends StandardProjectCreator {
 	}
 
 	@Override
-	public Project createStandardProject(String projectName, Context context) throws IOException, IllegalArgumentException {
+	public Project createStandardProject(String projectName, Context context, boolean landscape) throws IOException,
+			IllegalArgumentException {
+		// temporarily until standard landscape project exists.
+		if (landscape) {
+			return StandardProjectHandler.getInstance().createAndSaveEmptyProject(projectName, context, landscape);
+		}
 		if (StorageHandler.getInstance().projectExists(projectName)) {
 			throw new IllegalArgumentException("Project with name '" + projectName + "' already exists!");
 		}
@@ -86,7 +92,7 @@ public class StandardProjectCreatorDefault extends StandardProjectCreator {
 		String varRandomFrom = context.getString(R.string.default_project_var_random_from);
 		String varRandomTo = context.getString(R.string.default_project_var_random_to);
 
-		Project defaultProject = new Project(context, projectName);
+		Project defaultProject = new Project(context, projectName, landscape);
 		defaultProject.setDeviceData(context); // density anywhere here
 		StorageHandler.getInstance().saveProject(defaultProject);
 		ProjectManager.getInstance().setProject(defaultProject);
@@ -264,6 +270,7 @@ public class StandardProjectCreatorDefault extends StandardProjectCreator {
 			ProjectManager.getInstance().getFileChecksumContainer().addChecksum(soundFile2.getName(), soundFile2.getAbsolutePath());
 
 			mole2Sprite.setName(mole2Name);
+			mole2Sprite.setId(ProjectManager.getInstance().getNewId());
 			defaultProject.addSprite(mole2Sprite);
 
 			Script tempScript = mole2Sprite.getScript(0);
@@ -282,6 +289,7 @@ public class StandardProjectCreatorDefault extends StandardProjectCreator {
 			ProjectManager.getInstance().getFileChecksumContainer().addChecksum(soundFile3.getName(), soundFile3.getAbsolutePath());
 
 			mole3Sprite.setName(mole3Name);
+			mole3Sprite.setId(ProjectManager.getInstance().getNewId());
 			defaultProject.addSprite(mole3Sprite);
 
 			tempScript = mole3Sprite.getScript(0);
@@ -300,6 +308,7 @@ public class StandardProjectCreatorDefault extends StandardProjectCreator {
 			ProjectManager.getInstance().getFileChecksumContainer().addChecksum(soundFile4.getName(), soundFile4.getAbsolutePath());
 
 			mole4Sprite.setName(mole4Name);
+			mole4Sprite.setId(ProjectManager.getInstance().getNewId());
 			defaultProject.addSprite(mole4Sprite);
 
 			tempScript = mole4Sprite.getScript(0);

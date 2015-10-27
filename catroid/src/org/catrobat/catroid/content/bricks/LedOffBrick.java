@@ -79,7 +79,7 @@ public class LedOffBrick extends BrickBaseType {
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -87,7 +87,7 @@ public class LedOffBrick extends BrickBaseType {
 
 	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
-		sequence.addAction(sprite.getActionFactory().lights(false));
+		sequence.addAction(sprite.getActionFactory().createLightsAction(false));
 		return null;
 	}
 

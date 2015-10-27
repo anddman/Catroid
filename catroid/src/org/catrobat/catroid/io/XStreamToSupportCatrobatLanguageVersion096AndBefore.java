@@ -31,6 +31,8 @@ import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider
 import org.catrobat.catroid.content.BroadcastScript;
 import org.catrobat.catroid.content.StartScript;
 import org.catrobat.catroid.content.WhenScript;
+import org.catrobat.catroid.content.bricks.ArduinoSendDigitalValueBrick;
+import org.catrobat.catroid.content.bricks.ArduinoSendPWMValueBrick;
 import org.catrobat.catroid.content.bricks.Brick.BrickField;
 import org.catrobat.catroid.content.bricks.BroadcastBrick;
 import org.catrobat.catroid.content.bricks.BroadcastReceiverBrick;
@@ -50,6 +52,7 @@ import org.catrobat.catroid.content.bricks.DronePlayLedAnimationBrick;
 import org.catrobat.catroid.content.bricks.DroneTakeOffBrick;
 import org.catrobat.catroid.content.bricks.ForeverBrick;
 import org.catrobat.catroid.content.bricks.GoNStepsBackBrick;
+import org.catrobat.catroid.content.bricks.HideTextBrick;
 import org.catrobat.catroid.content.bricks.IfLogicBeginBrick;
 import org.catrobat.catroid.content.bricks.IfLogicElseBrick;
 import org.catrobat.catroid.content.bricks.IfLogicEndBrick;
@@ -72,6 +75,7 @@ import org.catrobat.catroid.content.bricks.PlaySoundBrick;
 import org.catrobat.catroid.content.bricks.RepeatBrick;
 import org.catrobat.catroid.content.bricks.SetVariableBrick;
 import org.catrobat.catroid.content.bricks.SetVolumeToBrick;
+import org.catrobat.catroid.content.bricks.ShowTextBrick;
 import org.catrobat.catroid.content.bricks.SpeakBrick;
 import org.catrobat.catroid.content.bricks.StopAllSoundsBrick;
 import org.catrobat.catroid.content.bricks.VibrationBrick;
@@ -123,14 +127,14 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-public class XStreamToSupportCatrobatLanguageVersion095AndBefore extends XStream {
+public class XStreamToSupportCatrobatLanguageVersion096AndBefore extends XStream {
 
-	private static final String TAG = XStreamToSupportCatrobatLanguageVersion095AndBefore.class.getSimpleName();
+	private static final String TAG = XStreamToSupportCatrobatLanguageVersion096AndBefore.class.getSimpleName();
 
 	private HashMap<String, BrickInfo> brickInfoMap;
 	private HashMap<String, String> scriptInfoMap;
 
-	public XStreamToSupportCatrobatLanguageVersion095AndBefore(PureJavaReflectionProvider reflectionProvider) {
+	public XStreamToSupportCatrobatLanguageVersion096AndBefore(PureJavaReflectionProvider reflectionProvider) {
 		super(reflectionProvider);
 	}
 
@@ -278,6 +282,16 @@ public class XStreamToSupportCatrobatLanguageVersion095AndBefore extends XStream
 		brickInfo = new BrickInfo(IfLogicEndBrick.class.getSimpleName());
 		brickInfoMap.put("phiroSensorEndBrick", brickInfo);
 
+		brickInfo = new BrickInfo(ArduinoSendDigitalValueBrick.class.getSimpleName());
+		brickInfo.addBrickFieldToMap("digitalPinNumber", BrickField.ARDUINO_DIGITAL_PIN_NUMBER);
+		brickInfo.addBrickFieldToMap("digitalPinValue", BrickField.ARDUINO_DIGITAL_PIN_VALUE);
+		brickInfoMap.put("arduinoSendDigitalValueBrick", brickInfo);
+
+		brickInfo = new BrickInfo(ArduinoSendPWMValueBrick.class.getSimpleName());
+		brickInfo.addBrickFieldToMap("pwmPinNumber", BrickField.ARDUINO_ANALOG_PIN_NUMBER);
+		brickInfo.addBrickFieldToMap("pwmPinValue", BrickField.ARDUINO_ANALOG_PIN_VALUE);
+		brickInfoMap.put("arduinoSendPWMValueBrick", brickInfo);
+
 		brickInfo = new BrickInfo(LoopEndBrick.class.getSimpleName());
 		brickInfoMap.put("loopEndBrick", brickInfo);
 
@@ -352,8 +366,8 @@ public class XStreamToSupportCatrobatLanguageVersion095AndBefore extends XStream
 		brickInfo.addBrickFieldToMap("text", BrickField.SPEAK);
 		brickInfoMap.put("speakBrick", brickInfo);
 
-		brickInfo = new BrickInfo(StopAllSoundsBrick.class.getSimpleName());
-		brickInfoMap.put("stopAllSoundsBrick", brickInfo);
+		brickInfo = new BrickInfo(WhenBrick.class.getSimpleName());
+		brickInfoMap.put("whenBrick", brickInfo);
 
 		brickInfo = new BrickInfo(TurnLeftBrick.class.getSimpleName());
 		brickInfo.addBrickFieldToMap("degrees", BrickField.TURN_LEFT_DEGREES);
@@ -370,8 +384,8 @@ public class XStreamToSupportCatrobatLanguageVersion095AndBefore extends XStream
 		brickInfo.addBrickFieldToMap("timeToWaitInSeconds", BrickField.TIME_TO_WAIT_IN_SECONDS);
 		brickInfoMap.put("waitBrick", brickInfo);
 
-		brickInfo = new BrickInfo(WhenBrick.class.getSimpleName());
-		brickInfoMap.put("whenBrick", brickInfo);
+		brickInfo = new BrickInfo(StopAllSoundsBrick.class.getSimpleName());
+		brickInfoMap.put("stopAllSoundsBrick", brickInfo);
 
 		brickInfo = new BrickInfo(WhenStartedBrick.class.getSimpleName());
 		brickInfoMap.put("whenStartedBrick", brickInfo);
@@ -417,6 +431,12 @@ public class XStreamToSupportCatrobatLanguageVersion095AndBefore extends XStream
 		brickInfo.addBrickFieldToMap("timeToFlyInSeconds", BrickField.DRONE_TIME_TO_FLY_IN_SECONDS);
 		brickInfo.addBrickFieldToMap("powerInPercent", BrickField.DRONE_POWER_IN_PERCENT);
 		brickInfoMap.put("droneMoveRightBrick", brickInfo);
+
+		brickInfo = new BrickInfo(ShowTextBrick.class.getSimpleName());
+		brickInfoMap.put("showTextBrick", brickInfo);
+
+		brickInfo = new BrickInfo(HideTextBrick.class.getSimpleName());
+		brickInfoMap.put("hideTextBrick", brickInfo);
 	}
 
 	private void initializeScriptInfoMap() {

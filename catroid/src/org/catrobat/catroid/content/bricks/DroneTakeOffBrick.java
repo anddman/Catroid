@@ -91,14 +91,14 @@ public class DroneTakeOffBrick extends BrickBaseType {
 			View layout = view.findViewById(R.id.brick_drone_takeoff);
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
 
 	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
-		sequence.addAction(ActionFactory.droneTakeOff());
+		sequence.addAction(ActionFactory.createDroneTakeOffAction());
 		return null;
 	}
 

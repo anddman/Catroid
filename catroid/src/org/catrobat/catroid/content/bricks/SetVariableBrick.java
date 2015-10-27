@@ -255,7 +255,7 @@ public class SetVariableBrick extends UserVariableBrick {
 			editVariable.setTextColor(editVariable.getTextColors().withAlpha(alphaValue));
 			editVariable.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 
 		return view;
@@ -272,7 +272,7 @@ public class SetVariableBrick extends UserVariableBrick {
 	@Override
 	public SetVariableBrick clone() {
 		SetVariableBrick clonedBrick = new SetVariableBrick(getFormulaWithBrickField(BrickField.VARIABLE)
-				.clone(), null);
+				.clone(), userVariable);
 		return clonedBrick;
 	}
 

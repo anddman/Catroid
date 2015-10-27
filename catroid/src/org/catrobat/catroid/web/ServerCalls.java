@@ -203,9 +203,53 @@ public final class ServerCalls {
 		}
 	}
 
+	public int oldNotificationId = 0;
+
 	public void downloadProject(String url, String filePath, final ResultReceiver receiver,
 			final int notificationId) throws IOException, WebconnectionException {
 
+		File file = new File(filePath);
+		if (!(file.getParentFile().mkdirs() || file.getParentFile().isDirectory())) {
+			throw new IOException("Directory not created");
+		}
+
+		Request request = new Request.Builder()
+				.url(url)
+				.build();
+
+		okHttpClient.networkInterceptors().add(new Interceptor() {
+			@Override
+			public Response intercept(Chain chain) throws IOException {
+				Response originalResponse = chain.proceed(chain.request());
+
+				if (notificationId >= oldNotificationId) {
+					oldNotificationId = notificationId;
+					return originalResponse.newBuilder()
+							.body(new ProgressResponseBody(
+									originalResponse.body(),
+									receiver,
+									notificationId))
+							.build();
+				} else {
+					return originalResponse;
+				}
+			}
+		});
+
+		try {
+			Response response = okHttpClient.newCall(request).execute();
+			BufferedSink bufferedSink = Okio.buffer(Okio.sink(file));
+			bufferedSink.writeAll(response.body().source());
+			bufferedSink.close();
+		} catch (IOException ioException) {
+			Log.e(TAG, Log.getStackTraceString(ioException));
+			throw new WebconnectionException(WebconnectionException.ERROR_NETWORK,
+					"Connection could not be established!");
+		}
+	}
+
+	public void downloadMedia(String url, String filePath, final ResultReceiver receiver)
+			throws IOException, WebconnectionException {
 		File file = new File(filePath);
 		if (!(file.getParentFile().mkdirs() || file.getParentFile().isDirectory())) {
 			throw new IOException("Directory not created");
@@ -223,7 +267,7 @@ public final class ServerCalls {
 						.body(new ProgressResponseBody(
 								originalResponse.body(),
 								receiver,
-								notificationId))
+								0))
 						.build();
 			}
 		});

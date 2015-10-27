@@ -123,7 +123,7 @@ public class ChangeVolumeByNBrick extends FormulaBrick {
 			editVolume.setTextColor(editVolume.getTextColors().withAlpha(alphaValue));
 			editVolume.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}

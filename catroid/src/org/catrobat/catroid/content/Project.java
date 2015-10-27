@@ -33,6 +33,7 @@ import org.catrobat.catroid.common.MessageContainer;
 import org.catrobat.catroid.common.ScreenModes;
 import org.catrobat.catroid.common.ScreenValues;
 import org.catrobat.catroid.content.bricks.Brick;
+import org.catrobat.catroid.content.bricks.conditional.PointToBrick;
 import org.catrobat.catroid.devices.mindstorms.nxt.sensors.NXTSensor;
 import org.catrobat.catroid.formulaeditor.DataContainer;
 import org.catrobat.catroid.physics.PhysicsWorld;
@@ -51,23 +52,26 @@ public class Project implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	private transient PhysicsWorld physicsWorld;
+
 	@XStreamAlias("header")
 	private XmlHeader xmlHeader = new XmlHeader();
-
 	@XStreamAlias("objectList")
 	private List<Sprite> spriteList = new ArrayList<Sprite>();
 	@XStreamAlias("data")
 	private DataContainer dataContainer = null;
-
-	private transient PhysicsWorld physicsWorld;
 	@XStreamAlias("settings")
 	private List<Setting> settings = new ArrayList<Setting>();
 
-	public Project(Context context, String name) {
+	public Project(Context context, String name, boolean landscape) {
 		xmlHeader.setProgramName(name);
 		xmlHeader.setDescription("");
 
-		ifLandscapeSwitchWidthAndHeight();
+		if (landscape) {
+			ifPortraitSwitchWidthAndHeight();
+		} else {
+			ifLandscapeSwitchWidthAndHeight();
+		}
 		if (ScreenValues.SCREEN_HEIGHT == 0 || ScreenValues.SCREEN_WIDTH == 0) {
 			Utils.updateScreenWidthAndHeight(context);
 		}
@@ -87,12 +91,37 @@ public class Project implements Serializable {
 		addSprite(background);
 	}
 
+	public Project(Context context, String name) {
+		this(context, name, false);
+	}
+
 	private void ifLandscapeSwitchWidthAndHeight() {
 		if (ScreenValues.SCREEN_WIDTH > ScreenValues.SCREEN_HEIGHT) {
 			int tmp = ScreenValues.SCREEN_HEIGHT;
 			ScreenValues.SCREEN_HEIGHT = ScreenValues.SCREEN_WIDTH;
 			ScreenValues.SCREEN_WIDTH = tmp;
 		}
+	}
+
+	private void ifPortraitSwitchWidthAndHeight() {
+		if (ScreenValues.SCREEN_WIDTH < ScreenValues.SCREEN_HEIGHT) {
+			int tmp = ScreenValues.SCREEN_HEIGHT;
+			ScreenValues.SCREEN_HEIGHT = ScreenValues.SCREEN_WIDTH;
+			ScreenValues.SCREEN_WIDTH = tmp;
+		}
+	}
+
+	public List<PointToBrick> getPointToBricks() {
+		List<PointToBrick> result = new ArrayList<>();
+		for (Sprite sprite : spriteList) {
+			for (Brick brick : sprite.getAllBricks()) {
+				if (brick instanceof PointToBrick) {
+					result.add((PointToBrick) brick);
+				}
+			}
+		}
+
+		return result;
 	}
 
 	public synchronized void addSprite(Sprite sprite) {
@@ -108,6 +137,15 @@ public class Project implements Serializable {
 
 	public List<Sprite> getSpriteList() {
 		return spriteList;
+	}
+
+	public int getSpritePositionById(Sprite sprite) {
+		for (int pos = 0; pos < spriteList.size(); pos++) {
+			if (spriteList.get(pos).getId() == sprite.getId()) {
+				return pos;
+			}
+		}
+		return 0;
 	}
 
 	public void setName(String name) {
@@ -291,10 +329,10 @@ public class Project implements Serializable {
 	}
 
 	public boolean checkIfPhiroProProject() {
-		return xmlHeader.isPhiroProProject();
+		return xmlHeader.isPhiroProject();
 	}
 
-	public void setIsPhiroProProject(boolean isPhiroProProject) {
-		xmlHeader.setPhiroProProject(isPhiroProProject);
+	public void setIsPhiroProProject(boolean isPhiroProject) {
+		xmlHeader.setIsPhiroProject(isPhiroProject);
 	}
 }

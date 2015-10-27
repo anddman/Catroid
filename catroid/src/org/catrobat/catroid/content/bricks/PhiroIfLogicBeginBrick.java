@@ -160,7 +160,7 @@ public class PhiroIfLogicBeginBrick extends IfLogicBeginBrick implements OnItemS
 
 			ifLabel.setTextColor(ifLabel.getTextColors().withAlpha(alphaValue));
 			ifLabelEnd.setTextColor(ifLabelEnd.getTextColors().withAlpha(alphaValue));
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 
 		return view;

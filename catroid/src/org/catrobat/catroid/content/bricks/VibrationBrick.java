@@ -140,19 +140,19 @@ public class VibrationBrick extends FormulaBrick {
 			TextView editSeconds = (TextView) view.findViewById(R.id.brick_vibration_edit_seconds_text);
 
 			textVibrationLabel.setTextColor(textVibrationLabel.getTextColors().withAlpha(alphaValue));
-			textVibrationSeconds.setTextColor(textVibrationSeconds.getTextColors().withAlpha((alphaValue)));
+			textVibrationSeconds.setTextColor(textVibrationSeconds.getTextColors().withAlpha(alphaValue));
 
 			editSeconds.setTextColor(editSeconds.getTextColors().withAlpha(alphaValue));
 			editSeconds.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
 
 	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
-		sequence.addAction(sprite.getActionFactory().vibrate(sprite,
+		sequence.addAction(sprite.getActionFactory().createVibrateAction(sprite,
 				getFormulaWithBrickField(BrickField.VIBRATE_DURATION_IN_SECONDS)));
 		return null;
 	}

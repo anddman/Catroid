@@ -229,7 +229,7 @@ public class ChangeVariableBrick extends UserVariableBrick {
 			editVariable.setTextColor(editVariable.getTextColors().withAlpha(alphaValue));
 			editVariable.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
@@ -245,7 +245,7 @@ public class ChangeVariableBrick extends UserVariableBrick {
 	@Override
 	public ChangeVariableBrick clone() {
 		ChangeVariableBrick clonedBrick = new ChangeVariableBrick(getFormulaWithBrickField(
-				BrickField.VARIABLE_CHANGE).clone(), null, inUserBrick);
+				BrickField.VARIABLE_CHANGE).clone(), userVariable, inUserBrick);
 		return clonedBrick;
 	}
 

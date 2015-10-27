@@ -41,7 +41,14 @@ public abstract class StandardProjectCreator {
 		return returnValue - differenceToNextFive;
 	}
 
-	public abstract Project createStandardProject(String projectName, Context context) throws IOException,
+	public Project createStandardProject(String projectName, Context context) throws
+			IOException,
+			IllegalArgumentException {
+		return createStandardProject(projectName, context, false);
+	}
+
+	public abstract Project createStandardProject(String projectName, Context context, boolean landscape) throws
+			IOException,
 			IllegalArgumentException;
 
 	public int getStandardProjectNameID() {

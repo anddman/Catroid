@@ -57,11 +57,16 @@ import java.util.List;
 public class SetLookBrick extends BrickBaseType implements OnLookDataListChangedAfterNewListener {
 	private static final long serialVersionUID = 1L;
 	private LookData look;
+	private int id = ProjectManager.getInstance().getNewId();
 	private transient View prototypeView;
 	private transient LookData oldSelectedLook;
 	private transient AdapterView<?> adapterView;
 
 	public SetLookBrick() {
+	}
+
+	public int getId() {
+		return id;
 	}
 
 	public void setLook(LookData lookData) {
@@ -171,7 +176,7 @@ public class SetLookBrick extends BrickBaseType implements OnLookDataListChanged
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 
 		return view;

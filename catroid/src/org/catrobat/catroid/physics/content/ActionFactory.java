@@ -34,6 +34,8 @@ import org.catrobat.catroid.content.BroadcastEvent;
 import org.catrobat.catroid.content.BroadcastEvent.BroadcastType;
 import org.catrobat.catroid.content.Sprite;
 import org.catrobat.catroid.content.actions.AddItemToUserListAction;
+import org.catrobat.catroid.content.actions.ArduinoSendDigitalValueAction;
+import org.catrobat.catroid.content.actions.ArduinoSendPWMValueAction;
 import org.catrobat.catroid.content.actions.BroadcastAction;
 import org.catrobat.catroid.content.actions.BroadcastNotifyAction;
 import org.catrobat.catroid.content.actions.ChangeBrightnessByNAction;
@@ -61,6 +63,7 @@ import org.catrobat.catroid.content.actions.DroneTurnRightAction;
 import org.catrobat.catroid.content.actions.DroneTurnRightWithMagnetometerAction;
 import org.catrobat.catroid.content.actions.GoNStepsBackAction;
 import org.catrobat.catroid.content.actions.HideAction;
+import org.catrobat.catroid.content.actions.HideTextAction;
 import org.catrobat.catroid.content.actions.IfLogicAction;
 import org.catrobat.catroid.content.actions.InsertItemIntoUserListAction;
 import org.catrobat.catroid.content.actions.LedAction;
@@ -90,6 +93,7 @@ import org.catrobat.catroid.content.actions.SetVolumeToAction;
 import org.catrobat.catroid.content.actions.SetXAction;
 import org.catrobat.catroid.content.actions.SetYAction;
 import org.catrobat.catroid.content.actions.ShowAction;
+import org.catrobat.catroid.content.actions.ShowTextAction;
 import org.catrobat.catroid.content.actions.SpeakAction;
 import org.catrobat.catroid.content.actions.StopAllSoundsAction;
 import org.catrobat.catroid.content.actions.TurnLeftAction;
@@ -241,6 +245,12 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
+	public Action createHideTextAction(Sprite sprite, String variableName) {
+		HideTextAction action = action(HideTextAction.class);
+		action.setText(variableName);
+		return action;
+	}
+
 	public Action createIfOnEdgeBounceAction(Sprite sprite) {
 		IfOnEdgeBounceAction action = Actions.action(IfOnEdgeBounceAction.class);
 		action.setSprite(sprite);
@@ -332,6 +342,22 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
+	public Action createArduinoSendDigitalValueAction(Sprite sprite, Formula pinNumber, Formula pinValue) {
+		ArduinoSendDigitalValueAction action = action(ArduinoSendDigitalValueAction.class);
+		action.setSprite(sprite);
+		action.setPinNumber(pinNumber);
+		action.setPinValue(pinValue);
+		return action;
+	}
+
+	public Action createArduinoSendPWMValueBrickAction(Sprite sprite, Formula pinNumber, Formula pinValue) {
+		ArduinoSendPWMValueAction action = action(ArduinoSendPWMValueAction.class);
+		action.setSprite(sprite);
+		action.setPinNumber(pinNumber);
+		action.setPinValue(pinValue);
+		return action;
+	}
+
 	public Action createMoveNStepsAction(Sprite sprite, Formula steps) {
 		MoveNStepsAction action = Actions.action(MoveNStepsAction.class);
 		action.setSprite(sprite);
@@ -418,6 +444,14 @@ public class ActionFactory extends Actions {
 	public Action createShowAction(Sprite sprite) {
 		ShowAction action = Actions.action(ShowAction.class);
 		action.setSprite(sprite);
+		return action;
+	}
+
+	public Action createShowTextAction(Sprite sprite, Formula x, Formula y, String variableName) {
+		ShowTextAction action = action(ShowTextAction.class);
+		action.setSprite(sprite);
+		action.setPosition(x, y);
+		action.setText(variableName);
 		return action;
 	}
 
@@ -572,15 +606,15 @@ public class ActionFactory extends Actions {
 		throw new RuntimeException("No physics action available in non-physics sprite!");
 	}
 
-	public static TemporalAction droneTakeOff() {
+	public static TemporalAction createDroneTakeOffAction() {
 		return action(DroneTakeoffAction.class);
 	}
 
-	public static TemporalAction droneLand() {
+	public static TemporalAction createDroneLandAction() {
 		return action(DroneTakeoffAction.class);
 	}
 
-	public static TemporalAction droneMoveUp(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveUpAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveUpAction action = action(DroneMoveUpAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -588,7 +622,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneMoveDown(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveDownAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveDownAction action = action(DroneMoveDownAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -596,7 +630,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneMoveLeft(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveLeftAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveLeftAction action = action(DroneMoveLeftAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -604,7 +638,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneMoveRight(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveRightAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveRightAction action = action(DroneMoveRightAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -612,7 +646,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneMoveForward(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveForwardAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveForwardAction action = action(DroneMoveForwardAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -620,7 +654,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneMoveBackward(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneMoveBackwardAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneMoveBackwardAction action = action(DroneMoveBackwardAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -628,7 +662,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneTurnRight(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneTurnRightAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneTurnRightAction action = action(DroneTurnRightAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -636,7 +670,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneTurnLeft(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneTurnLeftAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneTurnLeftAction action = action(DroneTurnLeftAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -644,7 +678,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneTurnLeftMagneto(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneTurnLeftMagnetoAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneTurnLeftWithMagnetometerAction action = action(DroneTurnLeftWithMagnetometerAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -652,7 +686,7 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction droneTurnRightMagneto(Sprite sprite, Formula seconds, Formula powerInPercent) {
+	public static TemporalAction createDroneTurnRightMagnetoAction(Sprite sprite, Formula seconds, Formula powerInPercent) {
 		DroneTurnRightWithMagnetometerAction action = action(DroneTurnRightWithMagnetometerAction.class);
 		action.setSprite(sprite);
 		action.setDelay(seconds);
@@ -660,21 +694,21 @@ public class ActionFactory extends Actions {
 		return action;
 	}
 
-	public static TemporalAction dronePlayLedAnimation() {
+	public static TemporalAction createDronePlayLedAnimationAction() {
 		return action(DronePlayLedAnimationAction.class);
 	}
 
-	public static TemporalAction droneFlip() {
+	public static TemporalAction createDroneFlipAction() {
 		return action(DroneFlipAction.class);
 	}
 
-	public static LedAction lights(boolean ledValue) {
+	public static LedAction createLightsAction(boolean ledValue) {
 		LedAction action = action(LedAction.class);
 		action.setLedValue(ledValue);
 		return action;
 	}
 
-	public static VibrateAction vibrate(Sprite sprite, Formula duration) {
+	public static VibrateAction createVibrateAction(Sprite sprite, Formula duration) {
 		VibrateAction action = action(VibrateAction.class);
 		action.setSprite(sprite);
 		action.setDuration(duration);

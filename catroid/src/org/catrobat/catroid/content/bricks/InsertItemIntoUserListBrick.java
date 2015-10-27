@@ -230,7 +230,7 @@ public class InsertItemIntoUserListBrick extends UserListBrick {
 			editTheValue.setTextColor(editTheValue.getTextColors().withAlpha(alphaValue));
 			editTheValue.getBackground().setAlpha(alphaValue);
 
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 
 		return view;

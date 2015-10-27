@@ -63,8 +63,24 @@ public final class StandardProjectHandler {
 		}
 	}
 
-	public static Project createAndSaveStandardProject(Context context) throws IOException {
+	public static Project createAndSaveStandardProject(Context context, boolean landscape) throws IOException {
 		String projectName = context.getString(getInstance().standardProjectCreator.getStandardProjectNameID());
+		return createAndSaveStandardProject(projectName, context, landscape);
+	}
+
+	public static Project createAndSaveStandardProject(Context context) throws IOException {
+		return createAndSaveStandardProject(context, false);
+	}
+
+	public static Project createAndSaveStandardProject(String projectName, Context context) throws
+			IOException,
+			IllegalArgumentException {
+		return createAndSaveStandardProject(projectName, context, false);
+	}
+
+	public static Project createAndSaveStandardProject(String projectName, Context context, boolean landscape) throws
+			IOException,
+			IllegalArgumentException {
 		Project standardProject = null;
 
 		if (StorageHandler.getInstance().projectExists(projectName)) {
@@ -72,7 +88,8 @@ public final class StandardProjectHandler {
 		}
 
 		try {
-			standardProject = createAndSaveStandardProject(projectName, context);
+			standardProject = getInstance().standardProjectCreator.createStandardProject(projectName, context,
+					landscape);
 		} catch (IllegalArgumentException ilArgument) {
 			Log.e(TAG, "Could not create standard project!", ilArgument);
 		}
@@ -80,16 +97,15 @@ public final class StandardProjectHandler {
 		return standardProject;
 	}
 
-	public static Project createAndSaveStandardProject(String projectName, Context context) throws IOException,
-			IllegalArgumentException {
-		return getInstance().standardProjectCreator.createStandardProject(projectName, context);
+	public static Project createAndSaveEmptyProject(String projectName, Context context) {
+		return createAndSaveEmptyProject(projectName, context, false);
 	}
 
-	public static Project createAndSaveEmptyProject(String projectName, Context context) {
+	public static Project createAndSaveEmptyProject(String projectName, Context context, boolean landscape) {
 		if (StorageHandler.getInstance().projectExists(projectName)) {
 			throw new IllegalArgumentException("Project with name '" + projectName + "' already exists!");
 		}
-		Project emptyProject = new Project(context, projectName);
+		Project emptyProject = new Project(context, projectName, landscape);
 		emptyProject.setDeviceData(context);
 		StorageHandler.getInstance().saveProject(emptyProject);
 		ProjectManager.getInstance().setProject(emptyProject);
@@ -114,4 +130,5 @@ public final class StandardProjectHandler {
 				break;
 		}
 	}
+
 }

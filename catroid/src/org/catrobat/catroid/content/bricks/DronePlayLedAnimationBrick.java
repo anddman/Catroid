@@ -91,14 +91,14 @@ public class DronePlayLedAnimationBrick extends BrickBaseType {
 			View layout = view.findViewById(R.id.brick_drone_play_led_animation);
 			Drawable background = layout.getBackground();
 			background.setAlpha(alphaValue);
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
 
 	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
-		sequence.addAction(ActionFactory.dronePlayLedAnimation());
+		sequence.addAction(ActionFactory.createDronePlayLedAnimationAction());
 		return null;
 	}
 

@@ -103,14 +103,14 @@ public class DroneLandBrick extends BrickBaseType {
 			if (adapterView != null) {
 				((TextView) adapterView.getChildAt(0)).setTextColor(color);
 			}
-			this.alphaValue = (alphaValue);
+			this.alphaValue = alphaValue;
 		}
 		return view;
 	}
 
 	@Override
 	public List<SequenceAction> addActionToSequence(Sprite sprite, SequenceAction sequence) {
-		sequence.addAction(ActionFactory.droneTakeOff()); // same command
+		sequence.addAction(ActionFactory.createDroneTakeOffAction()); // same command
 		return null;
 	}
 

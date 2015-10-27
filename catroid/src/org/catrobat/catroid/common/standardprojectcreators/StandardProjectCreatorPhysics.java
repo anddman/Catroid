@@ -74,7 +74,7 @@ public class StandardProjectCreatorPhysics extends StandardProjectCreator {
 	}
 
 	@Override
-	public Project createStandardProject(String projectName, Context context) throws IOException,
+	public Project createStandardProject(String projectName, Context context, boolean landscape) throws IOException,
 			IllegalArgumentException {
 		if (StorageHandler.getInstance().projectExists(projectName)) {
 			throw new IllegalArgumentException("Project with name '" + projectName + "' already exists!");
