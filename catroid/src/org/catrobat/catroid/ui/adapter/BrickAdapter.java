@@ -956,6 +956,10 @@ public class BrickAdapter extends BaseAdapter implements DragAndDropListener, On
 		return sprite.getScript(scriptPosition).getBrick(brickPosition);
 	}
 
+	public String getSpriteName() {
+		return this.sprite.getName();
+	}
+
 	public int getScriptCount() {
 		return ProjectManager.getInstance().getCurrentSprite().getNumberOfScripts();
 	}

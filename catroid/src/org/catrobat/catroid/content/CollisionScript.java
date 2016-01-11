@@ -35,13 +35,26 @@ public class CollisionScript extends BroadcastScript {
 	public CollisionScript(String broadcastMessage) {
 		super(broadcastMessage);
 	}
+	protected String targetSpriteName;
 
 	@Override
 	public ScriptBrick getScriptBrick() {
 		if (brick == null) {
 			brick = new CollisionReceiverBrick(this);
 		}
+		updateTargetSpriteName();
 		return brick;
+	}
+
+	@Override
+	public void setBroadcastMessage(String broadcastMessage) {
+		super.setBroadcastMessage(broadcastMessage);
+		updateTargetSpriteName();
+	}
+
+	private void updateTargetSpriteName() {
+		this.targetSpriteName = CollisionReceiverBrick.COLLISION_MESSAGE_CONNECTOR + receivedMessage.split
+				(CollisionReceiverBrick.COLLISION_MESSAGE_CONNECTOR)[1];
 	}
 
 	@Override

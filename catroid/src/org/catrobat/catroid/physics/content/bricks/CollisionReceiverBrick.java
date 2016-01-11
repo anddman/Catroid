@@ -51,13 +51,13 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 	private static final long serialVersionUID = 1L;
 
 	private CollisionScript receiveScript;
-	private transient String collisionSpriteName;
+	private transient String collisionBroadcastMessage;
 	ArrayAdapter<String> messageAdapter;
 
-	public static final String COLLISION_MESSAGE_CONNECTOR = "<\0-\0>";
+	public static final String COLLISION_MESSAGE_CONNECTOR = "\0";
 
 	public CollisionReceiverBrick(String spriteName) {
-		this.collisionSpriteName = spriteName;
+		this.collisionBroadcastMessage = spriteName;
 	}
 
 	public CollisionReceiverBrick(CollisionScript receiveScript) {
@@ -84,7 +84,7 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 	@Override
 	public String getBroadcastMessage() {
 		if (receiveScript == null) {
-			return collisionSpriteName;
+			return collisionBroadcastMessage;
 		}
 		return receiveScript.getBroadcastMessage();
 	}
@@ -98,7 +98,7 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 			alphaValue = 255;
 		}
 		if (receiveScript == null) {
-			receiveScript = new CollisionScript(collisionSpriteName);
+			receiveScript = new CollisionScript(collisionBroadcastMessage);
 			MessageContainer.addMessage(getBroadcastMessage());
 		}
 
@@ -137,11 +137,10 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				String selectedMessage = broadcastSpinner.getSelectedItem().toString();
-				if (!selectedMessage.equals(context.getString(R.string.new_broadcast_message))) {
-					receiveScript.setBroadcastMessage(selectedMessage);
-					collisionSpriteName = selectedMessage;
-				}
+				String broadcastMessage = ProjectManager.getInstance().getCurrentSprite().getName()
+						+ broadcastSpinner.getSelectedItem().toString();
+				receiveScript.setBroadcastMessage(broadcastMessage);
+				collisionBroadcastMessage = broadcastMessage;
 			}
 
 			@Override
@@ -158,13 +157,13 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 		String spriteName = ProjectManager.getInstance().getCurrentSprite().getName();
 		messageAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item);
 		messageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		messageAdapter.add(spriteName + COLLISION_MESSAGE_CONNECTOR + context.getString(R.string.collision_with_anybody));
+		messageAdapter.add(COLLISION_MESSAGE_CONNECTOR + context.getString(R.string.collision_with_anybody));
 		int resources = Brick.NO_RESOURCES;
 		for (Sprite sprite : project.getSpriteList()) {
 			if (!spriteName.equals(sprite.getName())) {
 				resources |= sprite.getRequiredResources();
 				if ((resources & Brick.PHYSIC) > 0 && messageAdapter.getPosition(sprite.getName()) < 0) {
-					messageAdapter.add(spriteName + COLLISION_MESSAGE_CONNECTOR + sprite.getName());
+					messageAdapter.add(COLLISION_MESSAGE_CONNECTOR + sprite.getName());
 					resources &= ~Brick.PHYSIC;
 				}
 			}
@@ -234,7 +233,7 @@ public class CollisionReceiverBrick extends ScriptBrick implements BroadcastMess
 	//				}
 	//
 	//				receiveScript.setBroadcastMessage(newMessage);
-	//				collisionSpriteName = newMessage;
+	//				collisionBroadcastMessage = newMessage;
 	//				MessageContainer.addMessage(newMessage);
 	//				setSpinnerSelection(spinner);
 	//				return true;

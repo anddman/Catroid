@@ -454,7 +454,7 @@
         <item quantity="other">"seconds "</item>
     </plurals>
     
-	<string name="brick_collision_receive">When physical collision between</string>
+	<string name="brick_collision_receive">On physical collision with</string>
 	<string name="collision_with_anybody">anybody</string>
     <string name="brick_broadcast_receive">When I receive</string>
     <string name="brick_broadcast">Broadcast</string>
@@ -478,7 +478,8 @@
     <string name="brick_variable_spinner_create_new_variable" >New…</string >
     <string name="brick_note_default_value" >"add comment here…"</string >
     <string name="brick_broadcast_default_value" >"message 1"</string >
-    <string name="brick_broadcast_invalid_symbol">"Message reserved for:\n\"When physical collision between\"-Brick\nPlease try again!"</string>
+    <string name="brick_broadcast_invalid_symbol">"Message reserved for:\n\"On physical collision with\"-Brick\nPlease
+        try again!"</string>
     <string name="brick_add_item_to_userlist_add" >Add</string >
     <string name="brick_add_item_to_userlist" >to list</string >
     <string name="brick_delete_item_from_userlist_delete" >Delete item from list</string >
