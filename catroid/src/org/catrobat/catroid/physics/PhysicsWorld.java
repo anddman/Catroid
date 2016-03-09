@@ -79,7 +79,7 @@ public class PhysicsWorld {
 	private int stabilizingSteCounter = 0;
 	private PhysicsBoundaryBox boundaryBox;
 
-	private PhysicsShapeBuilder physicsShapeBuilder = new PhysicsShapeBuilder();
+	private PhysicsShapeBuilder physicsShapeBuilder = PhysicsShapeBuilder.getInstance();
 
 	public PhysicsWorld() {
 		this(ScreenValues.SCREEN_WIDTH, ScreenValues.SCREEN_HEIGHT);
