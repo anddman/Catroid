@@ -58,11 +58,9 @@ public class PhysicsShapeScaleUtilsTest extends InstrumentationTestCase {
 	private Project project;
 	private PhysicsShapeBuilderStrategy strategy = new PhysicsShapeBuilderStrategyFastHull();
 	private Shape[] complexSingleConvexPolygonShapes;
-
 	static {
 		GdxNativesLoader.load();
 	}
-
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
@@ -181,7 +179,7 @@ public class PhysicsShapeScaleUtilsTest extends InstrumentationTestCase {
 					float secondShapeVertexDistance = vertexOne.dst(vertexTwo);
 
 					assertEquals("distance between vertices of shapes have not the correct relation",
-							firstShapeVertexDistance, secondShapeVertexDistance* (1 / scaleFactor), DELTA);
+							firstShapeVertexDistance, secondShapeVertexDistance * (1 / scaleFactor), DELTA);
 				}
 			} else {
 				assertTrue("There should be no other type than Polygon", false);

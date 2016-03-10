@@ -35,12 +35,12 @@ import java.util.Map;
 public class PhysicsShapeBuilder {
 
 	private static final String TAG = PhysicsShapeBuilder.class.getSimpleName();
-	private static final float[] ACCURACY_LEVELS = { 0.125f, 0.25f, 0.50f, 0.75f, 1.0f};
+	private static final float[] ACCURACY_LEVELS = { 0.125f, 0.25f, 0.50f, 0.75f, 1.0f };
 
 	private static PhysicsShapeBuilder instance = null;
 
 	public static PhysicsShapeBuilder getInstance() {
-		if(instance == null) {
+		if (instance == null) {
 			instance = new PhysicsShapeBuilder();
 		}
 		return instance;
@@ -49,7 +49,8 @@ public class PhysicsShapeBuilder {
 	private PhysicsShapeBuilderStrategy strategy = new PhysicsShapeBuilderStrategyFastHull();
 	private Map<String, ImageShapes> imageShapesMap = new HashMap<>();
 
-	private PhysicsShapeBuilder() {}
+	private PhysicsShapeBuilder() {
+	}
 
 	public void reset() {
 		strategy = new PhysicsShapeBuilderStrategyFastHull();
@@ -94,13 +95,13 @@ public class PhysicsShapeBuilder {
 			return ACCURACY_LEVELS[0];
 		}
 
-		for (int accuracyIdx = 0; accuracyIdx < ACCURACY_LEVELS.length-1; accuracyIdx++) {
+		for (int accuracyIdx = 0; accuracyIdx < ACCURACY_LEVELS.length - 1; accuracyIdx++) {
 			float average = (ACCURACY_LEVELS[accuracyIdx] + ACCURACY_LEVELS[accuracyIdx]) / 2;
 			if (scaleFactor < average) {
 				return ACCURACY_LEVELS[accuracyIdx];
 			}
 		}
-		return ACCURACY_LEVELS[ACCURACY_LEVELS.length-1];
+		return ACCURACY_LEVELS[ACCURACY_LEVELS.length - 1];
 	}
 
 	/**
@@ -115,7 +116,6 @@ public class PhysicsShapeBuilder {
 		private Pixmap pixmap;
 		private float sizeAdjustmentScaleFactor = 1;
 
-
 		public ImageShapes(Pixmap pixmap) {
 			if (pixmap == null) {
 				throw new RuntimeException("Pixmap must not null");
@@ -125,9 +125,9 @@ public class PhysicsShapeBuilder {
 			int height = this.pixmap.getHeight();
 			if (width > MAX_ORIGINAL_PIXMAP_SIZE || height > MAX_ORIGINAL_PIXMAP_SIZE) {
 				if (width > height) {
-					sizeAdjustmentScaleFactor = (float)MAX_ORIGINAL_PIXMAP_SIZE / width;
+					sizeAdjustmentScaleFactor = (float) MAX_ORIGINAL_PIXMAP_SIZE / width;
 				} else {
-					sizeAdjustmentScaleFactor = (float)MAX_ORIGINAL_PIXMAP_SIZE / height;
+					sizeAdjustmentScaleFactor = (float) MAX_ORIGINAL_PIXMAP_SIZE / height;
 				}
 			}
 		}
@@ -171,5 +171,4 @@ public class PhysicsShapeBuilder {
 			return shapeMap.get(shapeKey);
 		}
 	}
-
 }
