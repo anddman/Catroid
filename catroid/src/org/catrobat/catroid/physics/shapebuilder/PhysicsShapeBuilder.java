@@ -57,7 +57,7 @@ public class PhysicsShapeBuilder {
 		imageShapesMap = new HashMap<>();
 	}
 
-	public synchronized Shape[] getShape(LookData lookData, float scaleFactor) throws RuntimeException {
+	public synchronized Shape[] getScaledShapes(LookData lookData, float scaleFactor) throws RuntimeException {
 		if (scaleFactor < 0) {
 			throw new RuntimeException("scaleFactor can not be smaller than 0");
 		} else if (lookData == null) {
@@ -66,7 +66,7 @@ public class PhysicsShapeBuilder {
 
 		Pixmap pixmap = lookData.getPixmap();
 		if (pixmap == null) {
-			Log.e(TAG, "pixmap should not me null");
+			Log.e(TAG, "pixmap should not be null");
 			return null;
 		}
 
@@ -79,7 +79,7 @@ public class PhysicsShapeBuilder {
 		Shape[] shapes = imageShapesMap.get(imageIdentifier).getShapes(accuracyLevel);
 
 		if (shapes == null) {
-			Log.e(TAG, "shapes should not me null");
+			Log.e(TAG, "shapes should not be null");
 			return null;
 		}
 

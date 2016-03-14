@@ -115,7 +115,7 @@ public class PhysicsShapeBuilderTest extends InstrumentationTestCase {
 		LookData lookData = PhysicsTestUtils.generateLookData(simpleSingleConvexPolygonFile);
 		physicsLook.setLookData(lookData);
 
-		Shape[] shapes = physicsShapeBuilder.getShape(lookData,
+		Shape[] shapes = physicsShapeBuilder.getScaledShapes(lookData,
 				sprite.look.getSizeInUserInterfaceDimensionUnit() / 100f);
 
 		int expectedPolynoms = 1;
@@ -129,11 +129,11 @@ public class PhysicsShapeBuilderTest extends InstrumentationTestCase {
 
 		float[] accuracyLevels = (float[]) Reflection.getPrivateField(PhysicsShapeBuilder.class, "ACCURACY_LEVELS");
 
-		Shape[] lowerAccuracyShapes = physicsShapeBuilder.getShape(lookData, accuracyLevels[0]);
+		Shape[] lowerAccuracyShapes = physicsShapeBuilder.getScaledShapes(lookData, accuracyLevels[0]);
 		Shape[] lowestAccuracyShapes = lowerAccuracyShapes;
 		Shape[] highestAccuracyShapes = null;
 		for (int accuracyIdx = 1; accuracyIdx < accuracyLevels.length; accuracyIdx++) {
-			Shape[] higherAccuracyShapes = physicsShapeBuilder.getShape(lookData, accuracyLevels[accuracyIdx]);
+			Shape[] higherAccuracyShapes = physicsShapeBuilder.getScaledShapes(lookData, accuracyLevels[accuracyIdx]);
 			assertTrue("lower accuracy must have less or equal shapes than higher accuracy", lowerAccuracyShapes
 					.length <= higherAccuracyShapes.length);
 			lowerAccuracyShapes = higherAccuracyShapes;

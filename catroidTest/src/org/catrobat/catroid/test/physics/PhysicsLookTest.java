@@ -109,7 +109,7 @@ public class PhysicsLookTest extends InstrumentationTestCase {
 		pixmap = Utils.getPixmapFromFile(testImage);
 		lookData.setPixmap(pixmap);
 
-		Shape[] shapes = physicsShapeBuilder.getShape(lookData, sprite.look.getSizeInUserInterfaceDimensionUnit() / 100f);
+		Shape[] shapes = physicsShapeBuilder.getScaledShapes(lookData, sprite.look.getSizeInUserInterfaceDimensionUnit() / 100f);
 
 		assertTrue("shapes are 0", shapes.length > 0);
 		physicsShapeBuilder.reset();
