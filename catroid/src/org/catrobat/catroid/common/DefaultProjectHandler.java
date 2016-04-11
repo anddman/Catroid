@@ -55,11 +55,7 @@ public final class DefaultProjectHandler {
 	}
 
 	private DefaultProjectHandler() {
-		if (BuildConfig.BUILD_TYPE == BuildConfig.BUILD_TYPE_PHYSICS) {
-			setDefaultProjectCreator(ProjectCreatorType.PROJECT_CREATOR_PHYSICS);
-		} else {
-			setDefaultProjectCreator(ProjectCreatorType.PROJECT_CREATOR_DEFAULT);
-		}
+		setDefaultProjectCreator(ProjectCreatorType.PROJECT_CREATOR_DEFAULT);
 	}
 
 	public static Project createAndSaveDefaultProject(Context context, boolean landscapeMode) throws IOException {
